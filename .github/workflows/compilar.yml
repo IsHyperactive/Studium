@@ -312,7 +312,7 @@ jobs:
           done <<< "$old_assets"
           actual="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}" --jq '.assets[].name' | sort)"
           expected_sorted="$(jq -r '.[]' <<< "$expected" | sort)"
-          diff -u <(printf '%s\\n' "$expected_sorted") <(printf '%s\\n' "$actual")
+          diff -u <(printf '%s\n' "$expected_sorted") <(printf '%s\n' "$actual")
           echo "La release contiene exclusivamente los 6 paquetes portables y 2 archivos de verificación."
       - name: Eliminar releases y tags antiguos (solo tras verificación)
         env:
