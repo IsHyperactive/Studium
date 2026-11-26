@@ -203,6 +203,7 @@ jobs:
 
   release:
     name: Unificar publicación portable
+    if: github.event_name != 'pull_request'
     needs: [windows, linux, macos]
     runs-on: ubuntu-24.04
     permissions:
