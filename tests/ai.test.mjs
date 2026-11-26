@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rankContext, normalizeTerms, parseStudyResponse } from '../src/ai.ts';\nimport { createLocalStudyPlan } from '../src/study-plan.ts';
+import { rankContext, normalizeTerms, parseStudyResponse } from '../src/ai.ts';
+import { createLocalStudyPlan } from '../src/study-plan.ts';
 
 const docs=[
  {title:'Biología vegetal',subject:'Ciencias',content:'La fotosíntesis ocurre en los cloroplastos. La clorofila capta la luz y ayuda a transformar agua y dióxido de carbono en azúcares. Este proceso libera oxígeno.'},
