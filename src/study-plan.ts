@@ -4,18 +4,51 @@ type Section={title:string,body:string,parts?:Section[]};
 const TOKEN=/[a-záéíóúüñ]{2,}/gi;
 const norm=(s:string)=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 const STOP=new Set(('este esta estos estas aquel aquella para como pero porque cuando donde sobre entre desde hasta tambien puede pueden cada otra otro todos todas dicho sera hace hacer tener mas menos muy todo nada algo que quien cual la el las los del una uno unos unas por con sin son fue ser tiene y o a en se al lo su sus mi tu es esta de que what with from this that those which their there then also more most have has had into during than about after before while where when who whom whose how why and or as it is are be been being this these those an the utiliza utilizar utilizo utilizan produce producir produced producing convierte convertir convierten participa participan participante contribuye contribuyen sostiene sostener absorbe absorben depende depender permite permiten formar forman formado formas crece crecer mantener mantiene mejoran mejora cambia cambian explica explican describe describen comprenden comprender almacenada almacenado almacenadas almacenados producidos producida disponible disponibles proceso procesos funciones fundamentos etapa etapas importancia aplicaciones introduccion conclusion capitulo unidad leccion seccion apartado').split(/\s+/).map(norm));
+STOP.add('documento');STOP.add('informacion');STOP.add('texto');STOP.add('seccion');STOP.add('bloque');STOP.add('contenido');STOP.add('tema');STOP.add('ejemplo');STOP.add('proceso');STOP.add('concepto');STOP.add('idea');STOP.add('parte');STOP.add('forma');STOP.add('manera');STOP.add('actividad');STOP.add('estudio');STOP.add('aprendizaje');STOP.add('dato');STOP.add('datos');STOP.add('resultado');STOP.add('resultados');STOP.add('general');STOP.add('principal');STOP.add('objetivo');STOP.add('importante');STOP.add('fundamental');STOP.add('desarrollo');STOP.add('contexto');STOP.add('sistema');STOP.add('elemento');STOP.add('elementos');STOP.add('varios');STOP.add('aspecto');STOP.add('aspectos');STOP.add('relacion');STOP.add('relaciones');STOP.add('incluye');STOP.add('incluyen');STOP.add('partes');STOP.add('contenidos');
 const VERBS=new Set('utiliza utilizan produce producir convierte convierten participa participan contribuye contribuyen sostiene absorbe absorben depende permite permiten formar forman crece crecer mantener mantiene mejora mejoran cambia cambian explica explican describe describen comprende comprender'.split(' ').map(norm));
 function words(s:string){return(s.match(TOKEN)||[]).map(norm).filter(w=>w&&!STOP.has(w));}
 function sentences(s:string){return(s.replace(/\s+/g,' ').match(/[^.!?…]+(?:[.!?…]+|$)/g)||[]).map(x=>x.trim()).filter(x=>x.length>=32&&x.split(/\s+/).length>=6);}
-function isHeading(s:string){s=s.trim();return /^#{1,6}\s+\S/.test(s)||/^(cap[ií]tulo|unidad|tema|lecci[oó]n|secci[oó]n|apartado)\s*(\d+|[ivxlcdm]+)?\s*[:.-]?\s+\S/i.test(s)||/^\d{1,2}[.)]\s+\S/.test(s)||(/^[A-ZÁÉÍÓÚÜÑ0-9][A-ZÁÉÍÓÚÜÑ0-9\s:.-]{4,85}$/.test(s)&&s.split(/\s+/).length<=10);}
+function isHeading(s:string){s=s.trim();return /^#{1,6}\s+\S/.test(s)||/^(cap[ií]tulo|unidad|tema|lecci[oó]n|secci[oó]n|apartado)\s*(\d+|[ivxlcdm]+)?\s*[:.-]?\s+\S/i.test(s)||/^\d{1,2}[.)]\s+\S/.test(s)||(/^[A-ZÁÉÍÓÚÜÑ0-9][A-ZÁÉÍÓÚÜÑ0-9\s:.-]{4,85}$/.test(s)&&s.split(/\s+/).length<=10)||(/^[A-ZÁÉÍÓÚÜÑ][^.!?;:]{3,72}$/.test(s)&&s.split(/\s+/).length<=9);}
 function headingText(s:string){return s.trim().replace(/^#{1,6}\s*/,'').replace(/^\d{1,2}[.)]\s*/,'').trim();}
 function wc(s:string){return s.trim().split(/\s+/).filter(Boolean).length;}
 function termsFrom(text:string,limit=6){const raw=text.match(TOKEN)||[],clean=raw.map(norm),m=new Map<string,{display:string,n:number}>();for(let i=0;i<clean.length;i++){const a=clean[i];if(!a||STOP.has(a))continue;const v=m.get(a)||{display:raw[i],n:0};v.n++;m.set(a,v);const b=clean[i+1];if(b&&!STOP.has(b)&&!VERBS.has(b)&&a.length>=3&&b.length>=3){const k=a+' '+b,p=m.get(k)||{display:raw[i]+' '+raw[i+1],n:0};p.n++;m.set(k,p);}const mid=clean[i+1],c=clean[i+2];if(mid&&STOP.has(mid)&&c&&!STOP.has(c)&&!VERBS.has(c)&&a.length>=3&&c.length>=3){const k=a+' '+mid+' '+c,p=m.get(k)||{display:raw[i]+' '+raw[i+1]+' '+raw[i+2],n:0};p.n++;m.set(k,p);}}
  return [...m.entries()].map(([k,v])=>({k,...v,score:v.n*(k.includes(' ')?1.35:1)})).filter(x=>!STOP.has(x.k)&&x.k.split(' ').every(t=>t.length>=3&&!VERBS.has(t))&&(!x.k.includes(' ')||x.n>=2)).sort((a,b)=>b.score-a.score||b.k.length-a.k.length).slice(0,limit).map(x=>x.display).filter((x,i,a)=>a.findIndex(y=>norm(y)===norm(x))===i);}
-function makeTitle(body:string,i:number){const t=termsFrom(body,3);return t.length?'Bloque '+(i+1)+' · '+t.slice(0,2).join(' / '):'Bloque '+(i+1);}
+function makeTitle(body:string,i:number){const t=extractTerms([{title:'',body}],3);return t.length?'Bloque '+(i+1)+' · '+t.slice(0,2).join(' / '):'Bloque '+(i+1);}
 function chunk(title:string,body:string,target=430):Section[]{const ss=sentences(body);if(ss.length<4)return[{title,body:ss.join(' ').trim()||body.trim()}];const out:string[]=[];let cur:string[]=[],n=0;for(const s of ss){const w=wc(s);if(cur.length>=2&&n+w>target){out.push(cur.join(' '));cur=[];n=0;}cur.push(s);n+=w;}if(cur.length)out.push(cur.join(' '));return out.map((b,i)=>({title:out.length===1?title:title+' · parte '+(i+1),body:b}));}
 function parseSections(raw:string):Section[]{const parsed:Section[]=[];let title='',buf:string[]=[];const flush=()=>{const body=buf.join(' ').replace(/\s+/g,' ').trim();if(body.length>=65)parsed.push({title:title||'Sección '+(parsed.length+1),body});buf=[];};for(const line of raw.split(/\r?\n/)){const l=line.trim();if(!l)continue;if(isHeading(l)){flush();title=headingText(l);}else buf.push(l.replace(/^[-*•]\s*/,''));}flush();if(parsed.length>=2)return parsed.flatMap(s=>chunk(s.title,s.body,650));if(parsed.length===1){const c=chunk(parsed[0].title,parsed[0].body,380);if(c.length>=2)return c;return parsed;}const paragraphs=raw.split(/\n\s*\n|\r\n\s*\r\n/).map(p=>p.replace(/\s+/g,' ').trim()).filter(p=>p.length>=70),source=paragraphs.length?paragraphs:sentences(raw),out:string[]=[];let cur='',n=0;for(const p of source){const w=wc(p);if(cur&&n+w>430){out.push(cur.trim());cur='';n=0;}cur+=' '+p;n+=w;}if(cur.trim())out.push(cur.trim());return out.length?out.map((b,i)=>({title:makeTitle(b,i),body:b})): [{title:'Material completo',body:raw.replace(/\s+/g,' ').trim()}];}
-function extractTerms(sections:Section[],limit=12){const m=new Map<string,{display:string,n:number,df:number}>();sections.forEach((s,i)=>{const raw=(s.title+' '+s.body).match(TOKEN)||[],clean=raw.map(norm),seen=new Set<string>();for(let j=0;j<clean.length;j++){const a=clean[j];if(!a||STOP.has(a))continue;const keys=[a],b=clean[j+1],mid=clean[j+1],c=clean[j+2];if(b&&!STOP.has(b)&&!VERBS.has(b)&&a.length>=3&&b.length>=3)keys.push(a+' '+b);if(mid&&STOP.has(mid)&&c&&!STOP.has(c)&&!VERBS.has(c)&&a.length>=3&&c.length>=3)keys.push(a+' '+mid+' '+c);for(const k of keys){const display=k.includes(' ')?k.split(' ').length===3?raw[j]+' '+raw[j+1]+' '+raw[j+2]:raw[j]+' '+raw[j+1]:raw[j],v=m.get(k)||{display,n:0,df:0};v.n++;if(!seen.has(k)){v.df++;seen.add(k);}if(display.length>v.display.length)v.display=display;m.set(k,v);}}});const total=Math.max(1,sections.length),rank=[...m.entries()].map(([k,v])=>({k,...v,score:v.n*(1+Math.log(1+total/v.df))*(k.includes(' ')?1.25:1)})).filter(x=>!STOP.has(x.k)&&x.k.split(' ').every(t=>t.length>=3&&!VERBS.has(t))&&(!x.k.includes(' ')||x.n>=2)).sort((a,b)=>b.score-a.score||b.k.length-a.k.length),selected=rank.slice(0,limit).map(x=>x.display);return selected.filter(t=>{const k=norm(t);return k.includes(' ')||!selected.some(o=>norm(o).split(' ').includes(k)&&norm(o)!==k);}).filter((x,i,a)=>a.findIndex(y=>norm(y)===norm(x))===i);}
+function extractTerms(sections:Section[],limit=12){
+ const m=new Map<string,{display:string,n:number,df:number,heading:number}>();
+ sections.forEach(s=>{
+  const titleRaw=s.title.match(TOKEN)||[],titleClean=titleRaw.map(norm),titleTerms=new Set(titleClean.filter(t=>t&&!STOP.has(t)));
+  const raw=(s.title+' '+s.body).match(TOKEN)||[],clean=raw.map(norm),seen=new Set<string>();
+  for(let j=0;j<clean.length;j++){
+   const a=clean[j];if(!a||STOP.has(a)||a.length<3)continue;
+   const keys=[a],b=clean[j+1],mid=clean[j+1],c=clean[j+2];
+   if(b&&!STOP.has(b)&&!VERBS.has(b)&&a.length>=3&&b.length>=3)keys.push(a+' '+b);
+   if(mid&&STOP.has(mid)&&c&&!STOP.has(c)&&!VERBS.has(c)&&a.length>=3&&c.length>=3)keys.push(a+' '+mid+' '+c);
+   for(const k of keys){
+    const display=k.includes(' ')?k.split(' ').length===3?raw[j]+' '+raw[j+1]+' '+raw[j+2]:raw[j]+' '+raw[j+1]:raw[j];
+    const v=m.get(k)||{display,n:0,df:0,heading:0};v.n++;
+    if(!seen.has(k)){v.df++;seen.add(k);}
+    if(k.split(' ').some(t=>titleTerms.has(t)))v.heading++;
+    if(display.length>v.display.length)v.display=display;m.set(k,v);
+   }
+  }
+ });
+ const total=Math.max(1,sections.length);
+ const ranked=[...m.entries()].map(([k,v])=>({k,...v,score:v.n*(1+Math.log(1+total/v.df))*(k.includes(' ')?1.55:1)*(1+v.heading*.7)}))
+  .filter(x=>!STOP.has(x.k)&&x.k.split(' ').every(t=>t.length>=3&&!VERBS.has(t))&&(!x.k.includes(' ')||x.n>=2||x.heading>0)&&(x.k.split(' ').length>1||x.n>=2||x.heading>0))
+  .sort((a,b)=>b.score-a.score||b.k.length-a.k.length);
+ const selected:string[]=[];
+ for(const item of ranked){
+  const k=norm(item.display);
+  if(selected.some(t=>norm(t)===k))continue;
+  if(k.split(' ').length===1&&selected.some(t=>norm(t).split(' ').includes(k)))continue;
+  selected.push(item.display);
+  if(selected.length>=limit)break;
+ }
+ return selected;
+}
 function scoreSentences(ss:string[],terms:string[]){const termSet=new Set(terms.flatMap(t=>norm(t).split(' '))),freq=new Map<string,number>();for(const s of ss)for(const t of words(s))freq.set(t,(freq.get(t)||0)+1);const total=Math.max(1,[...freq.values()].reduce((a,b)=>a+b,0));return ss.map((sentence,i)=>{const t=words(sentence),u=new Set(t);let score=0;for(const w of u)score+=(1+Math.log(total/(freq.get(w)||1)))*(termSet.has(w)?1.5:1);return{sentence,index:i,tokens:u,score:score/Math.sqrt(Math.max(1,u.size))+t.filter(w=>termSet.has(w)).length*.35+(i<2?.08:0)};});}
 function similarity(a:Set<string>,b:Set<string>){const i=[...a].filter(x=>b.has(x)).length,u=new Set([...a,...b]).size;return u?i/u:0;}
 function distinct(ss:string[],terms:string[],n:number){const unique=ss.filter((s,i,a)=>a.findIndex(x=>norm(x)===norm(s))===i),rank=scoreSentences(unique,terms),chosen:typeof rank=[];while(chosen.length<n&&rank.length){let best=0,value=-Infinity;rank.forEach((x,i)=>{const r=chosen.reduce((m,y)=>Math.max(m,similarity(x.tokens,y.tokens)),0),v=x.score-r*1.25;if(v>value){value=v;best=i;}});chosen.push(rank.splice(best,1)[0]);}return chosen.sort((a,b)=>a.index-b.index).map(x=>x.sentence);}
@@ -28,27 +61,32 @@ const stages=[
  {name:'Aplicar y contrastar',activity:'Resuelve un caso hipotético nuevo con los conceptos del bloque. Compara dos ideas solo cuando el texto permita hacerlo; justifica cada conclusión con evidencia.'},
  {name:'Recuperar y evaluar',activity:'Haz una prueba sin consultar: definición, idea central, relación, aplicación y evidencia. Corrige cada respuesta y vuelve a explicar los errores sin mirar.'}
 ];
-function stageIndex(i:number,n:number){const seq:Record<number,number[]>={2:[0,4],3:[0,2,4],4:[0,1,3,4],5:[0,1,2,3,4]};return(seq[n]||seq[5])[i]??4;}
+function stageIndex(i:number,n:number){const seq:Record<number,number[]>={2:[0,3],3:[0,2,4],4:[0,1,3,4],5:[0,1,2,3,4]};return(seq[n]||seq[5])[i]??4;}
 export function createLocalStudyPlan(name:string,subject:string,source:string,minutes=30):LocalStudyPlan{
  const raw=source.trim();
  if(raw.length<300)throw new Error('El archivo contiene poco texto extraíble. Los PDF escaneados requieren OCR, que no está disponible.');
  const sections=parseSections(raw),all=sections.flatMap(s=>sentences(s.body));
  if(all.length<3)throw new Error('No se pudo separar el contenido en ideas legibles. Comprueba que el documento tenga texto y no sea una imagen escaneada.');
  const terms=extractTerms(sections,12),rawWords=wc(raw),duration=Math.max(20,Math.min(60,Math.round(minutes||30)));
- const desired=Math.min(5,Math.max(2,Math.ceil(rawWords/450),Math.min(sections.length,5))),topics=adjust(sections,desired),sessionCount=topics.length;
- const sumParts=sections.map(s=>distinct(sentences(s.body),extractTerms([s],5),1)[0]).filter(Boolean);
- const summary=[...sumParts,...distinct(all,terms,6)].filter((s,i,a)=>a.findIndex(x=>norm(x)===norm(s))===i).slice(0,6).join(' ').slice(0,2200);
+ const desired=Math.min(5,Math.max(2,Math.ceil(rawWords/600),Math.min(sections.length,5))),topics=adjust(sections,desired),sessionCount=topics.length;
+ const sumParts=sections.map(s=>{const sentence=distinct(sentences(s.body),extractTerms([s],5),1)[0];return sentence?s.title+': '+sentence:''}).filter(Boolean);
+ const summary=[...sumParts,...distinct(all,terms,4)].filter((s,i,a)=>a.findIndex(x=>norm(x)===norm(s))===i).slice(0,8).join(' ').slice(0,2200);
  const outline=topics.map(s=>s.title).filter((x,i,a)=>a.findIndex(y=>norm(y)===norm(x))===i).slice(0,10);
  const cards:{front:string,back:string}[]=[];
- for(const term of terms){const k=norm(term).split(' '),s=all.find(x=>k.every(t=>words(x).includes(t)))||all.find(x=>k.some(t=>words(x).includes(t)));if(s&&!cards.some(c=>c.back===s))cards.push({front:'¿Qué afirma el documento sobre «'+term+'» y qué función cumple?',back:s});if(cards.length>=10)break;}
- const questions:string[]=[];
- for(const topic of topics){const focus=extractTerms([topic],3),evidence=distinct(sentences(topic.body),focus,1)[0];
-  if(focus[0])questions.push('Explica «'+focus[0]+'» con tus palabras y señala qué frase del bloque respalda tu definición.');
-  if(focus.length>=2)questions.push('¿Qué relación presenta el texto entre «'+focus[0]+'» y «'+focus[1]+'»? Distingue la afirmación del texto de una inferencia.');
-  if(evidence)questions.push('Resume la idea de este fragmento en una frase propia y justifica tu interpretación: «'+evidence+'»');
+ for(const term of terms){
+  const k=norm(term).split(' '),s=all.find(x=>k.every(t=>words(x).includes(t)))||all.find(x=>k.some(t=>words(x).includes(t)));
+  if(s&&!cards.some(c=>c.back===s))cards.push({front:'Explica «'+term+'» con tus palabras y cita una frase que lo respalde.',back:s});
+  if(cards.length>=8)break;
  }
- questions.push('Aplica una idea del documento a un caso hipotético nuevo. Explica el razonamiento y cita qué parte del archivo lo respalda.');
- questions.push('Sin consultar, resume el material en 5–7 frases siguiendo el esquema y después comprueba qué ideas omitiste');
+ const questions:string[]=[];
+ for(const topic of topics){
+  const focus=extractTerms([topic],4),evidence=distinct(sentences(topic.body),focus,1)[0];
+  if(focus[0])questions.push('Define «'+focus[0]+'» con tus palabras. Después verifica tu explicación en el fragmento del bloque.');
+  if(focus.length>=2)questions.push('¿Cómo se relacionan «'+focus[0]+'» y «'+focus[1]+'» según el archivo? Si no hay relación explícita, explica por separado y señala tu inferencia.');
+  if(evidence)questions.push('¿Qué idea central expresa este fragmento y qué evidencia aporta? Reescríbelo sin copiar: «'+evidence+'»');
+ }
+ questions.push('Aplica una idea del material a un caso nuevo: explica el razonamiento y qué fragmento respalda el concepto (no inventes hechos).');
+ questions.push('Sin consultar, reconstruye el esquema y resume el documento en 5–7 frases; compara después y anota lo que omitiste');
  const [recall,studyTime,practice,check,log]=minuteSplit(duration);
  const lines=topics.map((topic,i)=>{
   const stage=stages[stageIndex(i,sessionCount)],local=extractTerms([topic],5),focus=local.length?local.slice(0,4):terms.slice(0,3),parts=topic.parts||[topic];
@@ -80,9 +118,14 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
    check+' min · CHECKPOINT (6 puntos):\n'+checkItems.map(x=>'□ '+x).join('\n')+'\nMeta: 5/6. Si obtienes menos, reestudia el criterio fallado y vuelve a responder sin consultar.\n'+
    log+' min · CORRECCIÓN: compara tus respuestas con la evidencia; registra el error y escribe una pregunta para el siguiente repaso.';
  });
+ const warnings:string[]=[];
+ if(!sections.some(s=>! /^(Bloque|Sección|Material completo)\b/i.test(s.title)))warnings.push('No se detectaron encabezados fiables; la ruta se dividió por longitud y términos frecuentes. Revisa el orden de los bloques.');
+ if(rawWords<500)warnings.push('El material es breve; la guía puede necesitar ejemplos o ejercicios adicionales que tu profesor haya indicado');
+ if(terms.length<4)warnings.push('Se encontraron pocos conceptos distintivos. Comprueba la extracción y añade manualmente los términos importantes');
  const review=Math.max(10,Math.round(duration*.4)),ped=retrieveKnowledge(name+' '+subject+' '+terms.slice(0,6).join(' '),3),pedText=ped.length?ped.map(e=>'• '+e.title+': '+e.practice).join('\n'):'• Recupera primero sin mirar, comprueba y corrige.\n• Distribuye el repaso; vuelve antes a lo que fallaste.';
  const method=[
   'PLAN DE ESTUDIO LOCAL — HEURÍSTICO, NO IA',
+  'ANTES DE CADA SESIÓN: prepara el material, aparta distracciones y ten una hoja para responder sin consultar. Descansa 3–5 minutos entre sesiones.',
   'Material: '+name+(subject?' · '+subject:'')+' · '+rawWords.toLocaleString('es')+' palabras',
   'Estructura detectada: '+sections.length+' bloque(s) de origen; ruta de '+sessionCount+' sesiones de '+duration+' minutos.',
   'OBJETIVO FINAL: explicar las ideas centrales con tus palabras, relacionarlas sin inventar conexiones, aplicar al menos una a un caso y respaldar respuestas con frases del documento.',
@@ -96,5 +139,5 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
   'REGISTRO DE PROGRESO: por sesión anota puntuación /6, concepto que fallaste y si ya puedes explicarlo sin mirar. Marca dominio solo con 5/6 o más en dos intentos separados.',
   'CONTROL DE CALIDAD: la extracción, segmentación y selección de conceptos son heurísticas locales. Revisa títulos, fragmentos y preguntas. Si el archivo es escaneado, tiene tablas complejas o la extracción pierde el orden, la guía puede ser incompleta; Studium no añade conocimiento externo.'
  ].join('\n');
- return{name,subject,source:raw,summary,outline,terms,cards,questions:[...new Set(questions)].slice(0,10),method,sessionCount,minutesPerSession:duration};
+ return{name,subject,source:raw,summary,outline,terms,cards,questions:[...new Set(questions)].slice(0,10),method,sessionCount,minutesPerSession:duration,warnings};
 }
