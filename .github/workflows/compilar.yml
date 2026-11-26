@@ -15,30 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  cancelar_obsoletas:
-    name: Cancelar builds anteriores
-    runs-on: ubuntu-24.04
-    permissions:
-      actions: write
-    steps:
-      - name: Cancelar otros runs de compilación
-        if: github.event_name != 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CURRENT_RUN: ${{ github.run_id }}
-        run: |
-          set -euo pipefail
-          stale_runs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?per_page=100" --jq '.workflow_runs[] | select(.status != "completed" and .head_branch == "main" and .path == ".github/workflows/compilar.yml") | .id')"
-          echo "Runs pendientes detectados:"
-          echo "$stale_runs"
-          while IFS= read -r run_id; do
-            [ -z "$run_id" ] && continue
-            [ "$run_id" = "$CURRENT_RUN" ] && continue
-            gh api --silent -X POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel" && echo "Cancelado run $run_id" || echo "No se pudo cancelar run $run_id"
-          done <<< "$stale_runs"
-
   windows:
-    needs: [cancelar_obsoletas]
     name: Windows ${{ matrix.arch }} · Portable
     runs-on: windows-2022
     strategy:
@@ -100,7 +77,6 @@ jobs:
           retention-days: 14
 
   linux:
-    needs: [cancelar_obsoletas]
     name: Linux ${{ matrix.arch }} · AppImage
     runs-on: ${{ matrix.runner }}
     strategy:
