@@ -42,7 +42,8 @@ Este plan prioriza una app de aprendizaje funcional sobre una lista de funciones
 - [ ] Tema claro/oscuro y preferencias.
 
 ## Fase 4 — Calidad y distribución
-- [ ] Tests de unidad para ranking, generación y programación de repaso.
+- [x] Tests de unidad para ranking de fuentes y validación/parsing de guías IA.
+- [ ] Tests de unidad para programación de repaso y almacenamiento.
 - [ ] Tests de integración de importación/exportación y almacenamiento portable.
 - [ ] CI: typecheck, build, pruebas y empaquetado por arquitectura.
 - [ ] Test manual de cada portable; revisar que no abra consola.
