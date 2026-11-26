@@ -9,3 +9,25 @@ test('texto sin encabezados se divide y recibe sesiones progresivas',()=>{const 
 test('rechaza texto insuficiente o extracción sin frases legibles',()=>{assert.throws(()=>createLocalStudyPlan('empty.txt','','texto breve'),/poco texto/);assert.throws(()=>createLocalStudyPlan('scan.pdf','','x'.repeat(350)),/ideas legibles/);});
 test('duración se limita a 20–60 minutos y reparte todos los minutos',()=>{for(const value of [10,20,25,30,45,60,90]){const minutes=Math.max(20,Math.min(60,value)),p=createLocalStudyPlan('x','',source,value);assert.equal(p.minutesPerSession,minutes);for(const s of p.method.split(/SESIÓN \d+ · /).slice(1)){const parts=[...s.matchAll(/(\d+) min ·/g)].map(x=>Number(x[1]));assert.equal(parts.reduce((a,b)=>a+b,0),minutes);assert.ok(parts.every(x=>x>=1));}}});
 test('documentos largos crean una ruta de hasta cinco sesiones',()=>{const p=createLocalStudyPlan('largo.txt','',source.repeat(8),45);assert.ok(p.sessionCount>=3&&p.sessionCount<=5);const blocks=p.method.split(/SESIÓN \d+ · /).slice(1);assert.equal(blocks.length,p.sessionCount);for(const s of blocks){const mins=[...s.matchAll(/(\d+) min ·/g)].map(x=>Number(x[1]));assert.equal(mins.reduce((a,b)=>a+b,0),45);}assert.match(p.method,/Recuperar y evaluar/);});
+
+test('el resumen conserva los encabezados de origen y alerta si faltan',()=>{
+ const p=createLocalStudyPlan('Biología.md','Biología',source,25);
+ assert.ok(p.summary.includes('Fundamentos de fotosíntesis:'));
+ assert.ok(p.summary.includes('Etapas del proceso:'));
+ assert.ok(p.summary.includes('Importancia y aplicaciones:'));
+ assert.ok(!p.warnings?.some(x=>/No se detectaron encabezados/.test(x)));
+ const plain=source.replace(/^# .*/gm,'').replace(/\n\n/g,' ');
+ const unheaded=createLocalStudyPlan('texto.txt','',plain,30);
+ assert.ok(unheaded.warnings?.some(x=>/No se detectaron encabezados/.test(x)));
+});
+test('dos sesiones incluyen comprensión inicial y aplicación antes de cierre',()=>{
+ const two=source.split(/\n\n/).filter(Boolean).slice(0,2).join(' ');
+ const p=createLocalStudyPlan('breve.txt','',two,20);
+ assert.equal(p.sessionCount,2);
+ assert.match(p.method,/SESIÓN 1 · Explorar y organizar/);
+ assert.match(p.method,/SESIÓN 2 · Aplicar y contrastar/);
+});
+test('conceptos evitan términos genéricos de estructura documental',()=>{
+ const p=createLocalStudyPlan('Biología.md','',source);
+ for(const t of p.terms)assert.ok(!['documento','información','texto','sección','bloque','contenido','tema'].includes(t.toLowerCase()));
+});
