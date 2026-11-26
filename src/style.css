@@ -112,3 +112,59 @@ button .ui-icon,.nav-btn .ui-icon,.kind .ui-icon,.topbar .ui-icon{margin:0}
 
 .ai-plan-toggle{display:flex;align-items:center;gap:9px;margin:10px 0;font-weight:650}
 .ai-plan-toggle input{width:18px;height:18px;accent-color:var(--accent,#2e9f91);flex:none}
+
+/* Ritmo y márgenes de seguridad: ningún icono o texto debe tocar el borde de su contenedor. */
+.content{padding:36px clamp(24px,4.5vw,56px) 72px}
+.topbar{padding-inline:clamp(22px,4vw,52px)}
+.sidebar{padding:28px 20px 22px}
+.nav-btn{padding:12px 15px;min-height:46px}
+.nav-icon{display:grid;place-items:center;width:28px;height:28px;flex:0 0 28px;padding:3px}
+.icon,.menu{padding:5px}
+.icon .ui-icon,.menu .ui-icon{width:19px;height:19px}
+.avatar{padding:7px}
+.quick button{padding:20px;min-height:112px}
+.quick button span{width:44px;height:44px;padding:8px}
+.quick button span .ui-icon{width:24px;height:24px}
+.upload-icon-frame{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;padding:11px;background:#e3f0eb;color:#286f73;margin:3px auto 7px}
+.upload-icon-frame .ui-icon{width:30px;height:30px}
+.upload-drop{padding:34px 24px;gap:12px}
+.upload-drop h2,.upload-drop p,.upload-drop input{max-width:calc(100% - 20px)}
+.upload-panel form{gap:20px}
+.upload-panel label:not(.ai-plan-toggle){padding-inline:2px}
+.ai-plan-toggle{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+.ai-plan-toggle input{width:20px;height:20px;flex:0 0 20px;margin:0}
+.study-plan{padding:18px;line-height:1.72}
+.study-session summary{padding:16px 18px}
+.study-session .study-plan{padding:18px}
+.study-preview{padding:10px 8px 14px}
+.study-preview>h3{margin-top:24px}
+.study-plan-intro{margin-bottom:16px}
+.study-plan-intro .study-plan{padding:18px 20px}
+button:has(.ui-icon){padding-inline:12px}
+.actions button{padding:9px 12px}
+.kind{padding:2px 3px}
+.tutor-prompts button{padding:10px 14px}
+.tutor-compose{gap:10px}
+.tutor-compose textarea{padding:14px 16px}
+.tutor-compose button{padding:12px 18px;min-width:90px}
+.tutor-setup,.tutor-panel{padding:20px;margin:16px 0}
+.prefs-grid{gap:14px}
+.tutor-message{padding:15px 17px}
+:root[data-theme="dark"] .upload-icon-frame{background:#29414b;color:#b8d3e0}
+@media(max-width:750px){
+ .content{padding:24px 20px 48px}
+ .topbar{padding-inline:18px}
+ .sidebar{padding:22px 17px 18px}
+ .hero{padding:26px 24px}
+ .upload-drop{padding:24px 18px}
+ .upload-icon-frame{margin-top:5px}
+ .quick button{padding:18px}
+ .study-plan{padding:15px}
+ .tutor-setup,.tutor-panel{padding:15px}
+}
+@media(max-width:380px){
+ .content{padding-inline:16px}
+ .topbar{padding-inline:14px}
+ .upload-drop{padding:20px 12px}
+ .upload-panel,.method-explainer{padding:16px}
+}
