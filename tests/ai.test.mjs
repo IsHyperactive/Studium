@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rankContext, normalizeTerms, conversationTitle, parseStudyResponse, parseQuizResponse, parseQuizGrade } from '../src/ai.ts';
+import { rankContext, normalizeTerms, conversationTitle, quizPercentage, parseStudyResponse, parseQuizResponse, parseQuizGrade } from '../src/ai.ts';
 import { createLocalStudyPlan } from '../src/study-plan.ts';
 
 const docs=[
@@ -93,3 +93,5 @@ test('parsea quizzes dentro de fences markdown',()=>{
  assert.equal(result.length,3);
  assert.equal(result[2].difficulty,'advanced');
 });
+
+test('el porcentaje de quiz excluye respuestas sin evaluación automática',()=>{\n assert.equal(quizPercentage([2,1,null,0]),50);\n assert.equal(quizPercentage([2,2]),100);\n assert.equal(quizPercentage([null,null]),null);\n});\n
