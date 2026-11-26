@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rankContext, normalizeTerms, parseStudyResponse } from '../src/ai.ts';
+import { rankContext, normalizeTerms, parseStudyResponse } from '../src/ai.ts';\nimport { createLocalStudyPlan } from '../src/study-plan.ts';
 
 const docs=[
  {title:'Biología vegetal',subject:'Ciencias',content:'La fotosíntesis ocurre en los cloroplastos. La clorofila capta la luz y ayuda a transformar agua y dióxido de carbono en azúcares. Este proceso libera oxígeno.'},
@@ -48,4 +48,17 @@ test('limita conceptos, tarjetas y preguntas',()=>{
  assert.equal(parsed.terms.length,10);
  assert.equal(parsed.cards.length,12);
  assert.equal(parsed.questions.length,10);
+});
+
+test('el plan local es específico al material y respeta la duración',()=>{
+ const source='La fotosíntesis convierte energía luminosa en energía química. La clorofila absorbe la luz y se encuentra en los cloroplastos. Durante el proceso se utiliza dióxido de carbono y agua para producir azúcares. El oxígeno se libera como resultado de las reacciones. La energía química queda almacenada en moléculas orgánicas. Las plantas usan esos compuestos para crecer y mantener sus funciones.';
+ const plan=createLocalStudyPlan('Biología.txt','Biología',source,25);
+ assert.match(plan.summary,/fotosíntesis|clorofila/i);
+ assert.ok(plan.cards.length>=2);
+ assert.match(plan.method,/25 min/);
+ assert.match(plan.method,/día 1/i);
+ assert.ok(plan.questions.length>=3);
+});
+test('planificador local rechaza textos insuficientes',()=>{
+ assert.throws(()=>createLocalStudyPlan('vacío','', 'solo palabras'),/poco texto/);
 });
