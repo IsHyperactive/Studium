@@ -21,4 +21,4 @@ test('contexto recuperado es útil y acotado',()=>{
  assert.ok(context.includes('Práctica:'));
  assert.ok(context.length>100&&context.length<10000);
 });
-test('consulta sin palabras útiles devuelve vacío',()=>assert.equal(retrieveKnowledge(''),[].length));
+test('consulta sin palabras útiles devuelve vacío',()=>assert.deepEqual(retrieveKnowledge(''),[]));
