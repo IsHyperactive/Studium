@@ -219,6 +219,15 @@ jobs:
             echo "- **Progreso:** consulta minutos de estudio, objetivos diarios, materiales, tarjetas pendientes y materias."
             echo "- **Respaldo:** exporta e importa tus datos en JSON."
             echo
+            echo "## Firma de Windows"
+            echo "La firma Authenticode es opcional en CI y requiere un certificado de firma de código configurado como GitHub Secrets. Sin certificado, los ZIP de Windows contienen ejecutables sin firmar; SmartScreen puede advertir."
+            echo
+            echo "## Qué hace Studium"
+            echo "- Importa PDF, EPUB, DOCX, TXT y Markdown y extrae texto en el dispositivo."
+            echo "- Genera resumen, esquema, conceptos clave, preguntas y un plan de estudio."
+            echo "- Crea tarjetas de repaso automáticamente y guarda una guía en la Biblioteca."
+            echo "- El análisis es heurístico local, no IA. Los PDF escaneados requieren OCR, que aún no está incluido."
+            echo
             echo "## Descargas"
             echo "| Plataforma | Arquitectura | Formato |"
             echo "|---|---|---|"
