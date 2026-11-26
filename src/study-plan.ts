@@ -20,7 +20,81 @@ function scoreSentences(ss:string[],terms:string[]){const termSet=new Set(terms.
 function similarity(a:Set<string>,b:Set<string>){const i=[...a].filter(x=>b.has(x)).length,u=new Set([...a,...b]).size;return u?i/u:0;}
 function distinct(ss:string[],terms:string[],n:number){const unique=ss.filter((s,i,a)=>a.findIndex(x=>norm(x)===norm(s))===i),rank=scoreSentences(unique,terms),chosen:typeof rank=[];while(chosen.length<n&&rank.length){let best=0,value=-Infinity;rank.forEach((x,i)=>{const r=chosen.reduce((m,y)=>Math.max(m,similarity(x.tokens,y.tokens)),0),v=x.score-r*1.25;if(v>value){value=v;best=i;}});chosen.push(rank.splice(best,1)[0]);}return chosen.sort((a,b)=>a.index-b.index).map(x=>x.sentence);}
 function adjust(input:Section[],count:number){let a=[...input];while(a.length<count){const i=a.reduce((best,x,j)=>wc(x.body)>wc(a[best].body)?j:best,0),s=a[i],ss=sentences(s.body);if(ss.length<3)break;const mid=Math.ceil(ss.length/2),l=ss.slice(0,mid).join(' '),r=ss.slice(mid).join(' '),generic=/^(sección|material completo|bloque)\b/i.test(s.title);a.splice(i,1,{title:generic?makeTitle(l,i):s.title+' · parte A',body:l},{title:generic?makeTitle(r,i+1):s.title+' · parte B',body:r});}while(a.length>count){let i=0,min=Infinity;for(let j=0;j<a.length-1;j++){const w=wc(a[j].body)+wc(a[j+1].body);if(w<min){min=w;i=j;}}const x=a[i],y=a[i+1];a.splice(i,2,{title:x.title+' + '+y.title,body:x.body+' '+y.body,parts:[...(x.parts||[x]),...(y.parts||[y])]});}return a;}
-function minuteSplit(n:number){const m=[.1,.3,.35,.2,.05].map(x=>Math.max(1,Math.round(n*x)));let d=n-m.reduce((a,b)=>a+b,0);m[3]+=d;if(m[3]<1){d=1-m[3];m[3]=1;m[1]=Math.max(1,m[1]-d);}return m;}
-const stages=[{activity:'Crea un mapa de 3–5 ideas. Define cada concepto con tus palabras y añade un ejemplo propio; marca qué ejemplo puedes respaldar con el texto.'},{activity:'Reconstruye un diagrama de 3–4 pasos o relaciones. Explica cada flecha y apóyala con una frase del documento.'},{activity:'Resuelve un caso hipotético nuevo sin consultar. Después explica qué concepto aplicaste y qué evidencia lo respalda.'},{activity:'Compara dos ideas en una tabla: definición, semejanza, diferencia y evidencia. Si el archivo no ofrece una diferencia, anótalo en lugar de inventarla.'},{activity:'Haz un mini-examen: explicación breve, relación entre ideas, aplicación y una pregunta de evidencia. Corrige tus errores con el fragmento.'}];
-function stageIndex(i:number,n:number){const seq:Record<number,number[]>={2:[0,2],3:[0,2,4],4:[0,1,3,4],5:[0,1,2,3,4]};return(seq[n]||seq[5])[i]??4;}
-export function createLocalStudyPlan(name:string,subject:string,source:string,minutes=30):LocalStudyPlan{const raw=source.trim();if(raw.length<300)throw new Error('El archivo contiene poco texto extraíble. Los PDF escaneados requieren OCR, que no está disponible.');const sections=parseSections(raw),all=sections.flatMap(s=>sentences(s.body));if(all.length<3)throw new Error('No se pudo separar el contenido en ideas legibles. Comprueba que el documento tenga texto y no sea una imagen escaneada.');const terms=extractTerms(sections,12),sumN=Math.min(6,Math.max(3,Math.ceil(all.length/5))),sumParts=sections.map(s=>distinct(sentences(s.body),extractTerms([s],5),1)).flat().filter(Boolean),summary=[...sumParts,...distinct(all,terms,sumN)].filter((s,i,a)=>a.findIndex(x=>norm(x)===norm(s))===i).slice(0,sumN).join(' ').slice(0,2200),rawWords=wc(raw),duration=Math.max(20,Math.min(60,Math.round(minutes||30))),desired=Math.min(5,Math.max(2,Math.ceil(rawWords/550),rawWords>=350?Math.min(sections.length,4):2)),topics=adjust(sections,desired),sessionCount=topics.length,outline=topics.map(s=>s.title).filter((x,i,a)=>a.findIndex(y=>norm(y)===norm(x))===i).slice(0,10),cards:{front:string,back:string}[]=[];for(const term of terms){const k=norm(term).split(' '),s=all.find(x=>k.every(t=>words(x).includes(t)))||all.find(x=>k.some(t=>words(x).includes(t)));if(s&&!cards.some(c=>c.back===s))cards.push({front:'¿Qué explica el material sobre «'+term+'»?',back:s});if(cards.length>=10)break;}const ev=distinct(all,terms,4),questions:string[]=[];for(const t of terms.slice(0,3))questions.push('Define «'+t+'» con tus palabras y verifica la definición en el documento.');if(ev[0])questions.push('¿Qué idea principal sostiene este fragmento? Reescríbela sin copiar: «'+ev[0]+'»');if(terms.length>=2)questions.push('¿Qué relación entre «'+terms[0]+'» y «'+terms[1]+'» presenta el material? Usa una frase como evidencia.');questions.push('Aplica un concepto del archivo a un caso hipotético nuevo. Explica por qué encaja y señala qué parte del texto respalda tu razonamiento.');if(ev[1])questions.push('¿Qué evidencia del documento apoya o matiza esta afirmación? «'+ev[1]+'»');questions.push('Resume '+(subject||name)+' en 4–6 frases y organiza las ideas siguiendo el esquema, sin consultar el archivo.');const[recall,study,practice,check,log]=minuteSplit(duration),lines=topics.map((s,i)=>{const stage=stages[stageIndex(i,sessionCount)],local=extractTerms([s],5),focus=local.length?local.slice(0,4):terms.slice(0,3),parts=s.parts||[s],e=parts.flatMap(p=>distinct(sentences(p.body),extractTerms([p],5),1)).slice(0,2);if(e.length<2)e.push(...distinct(sentences(s.body),focus,2-e.length));const objectives=['Al terminar, explica la idea central del bloque, define dos conceptos clave y da un ejemplo propio.','Al terminar, reconstruye en 3–4 pasos la secuencia o relación descrita y apóyala con evidencia.','Al terminar, resuelve un caso hipotético y justifica cómo aplicaste '+(focus[0]||'el concepto')+' con una frase del texto.','Al terminar, compara dos ideas y respalda semejanzas/diferencias; si el texto no las establece, indícalo.','Al terminar, sintetiza el bloque en 5 frases y responde 3 preguntas sin consultar.'][stageIndex(i,sessionCount)],cp=['□ Explica '+(focus[0]||'la idea central')+' sin leer (1 punto).','□ Identifica una frase que respalde tu explicación (1 punto).','□ Completa la actividad y justifica el resultado (1 punto).'].join('\n'),eText=e.length?e.map(x=>'• '+x).join('\n'):'• '+s.body.slice(0,360);return 'SESIÓN '+(i+1)+' — '+s.title+' ('+duration+' min)\nOBJETIVO MEDIBLE: '+objectives[stageIndex(i,sessionCount)]+'\nFOCO DEL DOCUMENTO: '+focus.join(' · ')+'\nEVIDENCIA PARA ESTUDIAR:\n'+eText+'\n\n'+recall+' min · RECUPERACIÓN INICIAL: escribe lo que recuerdas de '+(focus.slice(0,2).join(' y ')||s.title)+'; marca lo que no sabes.\n'+study+' min · ESTUDIO DIRIGIDO: relee solo el bloque; subraya definición, proceso/relación y evidencia. Completa el mapa/diagrama con estas ideas.\n'+practice+' min · PRÁCTICA ACTIVA: '+stage.activity+'\n'+check+' min · CHECKPOINT (3 puntos):\n'+cp+'\nMeta: 3/3. Si obtienes 0–2, revisa el punto fallado y vuelve a explicarlo sin mirar.\n'+log+' min · REGISTRO: anota el error/duda principal y una pregunta para el próximo repaso.';});const review=Math.max(10,Math.round(duration*.4)),ped=retrieveKnowledge(name+' '+subject+' '+terms.slice(0,6).join(' '),3),pedText=ped.length?ped.map(e=>'• '+e.title+': '+e.practice).join('\n'):'• Recuperación activa: intenta recordar antes de consultar; verifica y corrige.\n• Práctica distribuida: repasa al día siguiente, en 3 días y en 7 días; ajusta según aciertos.',method=['PLAN LOCAL BASADO EN EL TEXTO (heurístico; no usa IA)','Principios pedagógicos recuperados:\n'+pedText,'Material: '+name+(subject?' · '+subject:'')+' · '+rawWords.toLocaleString('es')+' palabras','Objetivo global: explicar las ideas principales con tus palabras, conectarlas mediante evidencia y aplicarlas a un ejemplo.','Ruta: '+sessionCount+' sesiones de '+duration+' minutos. Cada bloque usa fragmentos del documento; no añade hechos externos.','',...lines,'','REPASO ESPACIADO: día 1, día 3 y día 7 ('+review+' min cada vez). Primero responde las preguntas sin leer; luego comprueba con el texto y repasa solo los errores.','CRITERIO DE DOMINIO: en cada bloque logra 3/3 en el checkpoint; al final responde al menos 4 preguntas de comprobación, explica el esquema sin mirar y respalda dos respuestas con evidencia. Si no lo consigues, reestudia el bloque que fallaste.','NOTA: la extracción y selección de ideas son heurísticas locales. Revisa el plan y los fragmentos; un documento mal extraído o ambiguo puede producir una guía incompleta.'].join('\n');return{name,subject,source:raw,summary,outline,terms,cards,questions:[...new Set(questions)].slice(0,8),method,sessionCount,minutesPerSession:duration};}
+function minuteSplit(n:number){const m=[.15,.25,.3,.2,.1].map(x=>Math.max(1,Math.round(n*x)));let d=n-m.reduce((a,b)=>a+b,0);m[1]+=d;if(m[1]<1){d=1-m[1];m[1]=1;m[0]=Math.max(1,m[0]-d);}return m;}
+const stages=[
+ {name:'Explorar y organizar',activity:'Haz un mapa con la idea central y 3–5 subideas del bloque. Distingue lo que el texto afirma de tus propias inferencias.'},
+ {name:'Comprender y explicar',activity:'Cierra el archivo y explica los conceptos con palabras sencillas. Reabre solo para corregir definiciones; añade un ejemplo propio y marca si es una inferencia.'},
+ {name:'Reconstruir relaciones',activity:'Dibuja el proceso, causa–efecto o relación que describe el texto. Si no hay una secuencia explícita, organiza las ideas por relación y señala qué vínculo propone el documento.'},
+ {name:'Aplicar y contrastar',activity:'Resuelve un caso hipotético nuevo con los conceptos del bloque. Compara dos ideas solo cuando el texto permita hacerlo; justifica cada conclusión con evidencia.'},
+ {name:'Recuperar y evaluar',activity:'Haz una prueba sin consultar: definición, idea central, relación, aplicación y evidencia. Corrige cada respuesta y vuelve a explicar los errores sin mirar.'}
+];
+function stageIndex(i:number,n:number){const seq:Record<number,number[]>={2:[0,4],3:[0,2,4],4:[0,1,3,4],5:[0,1,2,3,4]};return(seq[n]||seq[5])[i]??4;}
+export function createLocalStudyPlan(name:string,subject:string,source:string,minutes=30):LocalStudyPlan{
+ const raw=source.trim();
+ if(raw.length<300)throw new Error('El archivo contiene poco texto extraíble. Los PDF escaneados requieren OCR, que no está disponible.');
+ const sections=parseSections(raw),all=sections.flatMap(s=>sentences(s.body));
+ if(all.length<3)throw new Error('No se pudo separar el contenido en ideas legibles. Comprueba que el documento tenga texto y no sea una imagen escaneada.');
+ const terms=extractTerms(sections,12),rawWords=wc(raw),duration=Math.max(20,Math.min(60,Math.round(minutes||30)));
+ const desired=Math.min(5,Math.max(2,Math.ceil(rawWords/450),Math.min(sections.length,5))),topics=adjust(sections,desired),sessionCount=topics.length;
+ const sumParts=sections.map(s=>distinct(sentences(s.body),extractTerms([s],5),1)[0]).filter(Boolean);
+ const summary=[...sumParts,...distinct(all,terms,6)].filter((s,i,a)=>a.findIndex(x=>norm(x)===norm(s))===i).slice(0,6).join(' ').slice(0,2200);
+ const outline=topics.map(s=>s.title).filter((x,i,a)=>a.findIndex(y=>norm(y)===norm(x))===i).slice(0,10);
+ const cards:{front:string,back:string}[]=[];
+ for(const term of terms){const k=norm(term).split(' '),s=all.find(x=>k.every(t=>words(x).includes(t)))||all.find(x=>k.some(t=>words(x).includes(t)));if(s&&!cards.some(c=>c.back===s))cards.push({front:'¿Qué afirma el documento sobre «'+term+'» y qué función cumple?',back:s});if(cards.length>=10)break;}
+ const questions:string[]=[];
+ for(const topic of topics){const focus=extractTerms([topic],3),evidence=distinct(sentences(topic.body),focus,1)[0];
+  if(focus[0])questions.push('Explica «'+focus[0]+'» con tus palabras y señala qué frase del bloque respalda tu definición.');
+  if(focus.length>=2)questions.push('¿Qué relación presenta el texto entre «'+focus[0]+'» y «'+focus[1]+'»? Distingue la afirmación del texto de una inferencia.');
+  if(evidence)questions.push('Resume la idea de este fragmento en una frase propia y justifica tu interpretación: «'+evidence+'»');
+ }
+ questions.push('Aplica una idea del documento a un caso hipotético nuevo. Explica el razonamiento y cita qué parte del archivo lo respalda.');
+ questions.push('Sin consultar, resume el material en 5–7 frases siguiendo el esquema y después comprueba qué ideas omitiste');
+ const [recall,studyTime,practice,check,log]=minuteSplit(duration);
+ const lines=topics.map((topic,i)=>{
+  const stage=stages[stageIndex(i,sessionCount)],local=extractTerms([topic],5),focus=local.length?local.slice(0,4):terms.slice(0,3),parts=topic.parts||[topic];
+  let evidence=parts.flatMap(p=>distinct(sentences(p.body),extractTerms([p],5),1)).filter(Boolean);
+  if(evidence.length<2)evidence=[...evidence,...distinct(sentences(topic.body),focus,2-evidence.length)];
+  evidence=[...new Set(evidence)].slice(0,2);
+  const focusText=focus.length?focus.map(t=>'«'+t+'»').join(', '):'las ideas principales';
+  const first=focus[0]||topic.title,second=focus[1];
+  const objectives=[
+   'Explica la idea central de «'+topic.title+'» y define '+focusText+' con palabras propias; distingue la evidencia del documento de tus ejemplos.',
+   'Parafrasea '+focusText+' y aclara qué afirma el texto, qué ejemplo aporta y qué duda te queda.',
+   'Reconstruye la relación o secuencia descrita en «'+topic.title+'»; conecta '+focusText+' con evidencia y señala si el vínculo es explícito o inferido.',
+   'Aplica '+focusText+' a un caso hipotético y contrasta tu conclusión con el fragmento; no añadas hechos que el documento no respalde.',
+   'Recupera sin consultar las ideas de «'+topic.title+'», conecta '+focusText+' y responde una mini-prueba usando evidencia.'
+  ][stageIndex(i,sessionCount)];
+  const checkItems=[
+   'Explica '+(first?'«'+first+'»':'la idea principal')+' sin leer (0–2 puntos).',
+   second?'Describe la relación entre «'+first+'» y «'+second+'»; si el texto no la establece, marca tu inferencia (0–2).':'Reconstruye una idea o paso clave y evita añadir información no presente (0–2).',
+   'Localiza una frase exacta que respalde tu explicación y di por qué es relevante (0–2).'
+  ];
+  const evidenceText=evidence.length?evidence.map(x=>'• '+x).join('\n'):'• No se detectó una frase fiable; vuelve al bloque y selecciona una evidencia manual.';
+  return 'SESIÓN '+(i+1)+' · '+stage.name+' — '+topic.title+' ('+duration+' min)\n'+
+   'OBJETIVO OBSERVABLE: '+objectives+'\n'+
+   'FOCO: '+focusText+'\n'+
+   'EVIDENCIA DEL ARCHIVO (fragmentos):\n'+evidenceText+'\n\n'+
+   recall+' min · RECUPERACIÓN: antes de leer, escribe lo que recuerdas de '+(focus.slice(0,2).join(' y ')||topic.title)+' y una pregunta que no puedas responder.\n'+
+   studyTime+' min · LECTURA SELECTIVA: lee este bloque; marca definición, idea principal, relación/proceso y la frase que respalda cada una. No subrayes todo.\n'+
+   practice+' min · PRODUCCIÓN ACTIVA: '+stage.activity+'\n'+
+   check+' min · CHECKPOINT (6 puntos):\n'+checkItems.map(x=>'□ '+x).join('\n')+'\nMeta: 5/6. Si obtienes menos, reestudia el criterio fallado y vuelve a responder sin consultar.\n'+
+   log+' min · CORRECCIÓN: compara tus respuestas con la evidencia; registra el error y escribe una pregunta para el siguiente repaso.';
+ });
+ const review=Math.max(10,Math.round(duration*.4)),ped=retrieveKnowledge(name+' '+subject+' '+terms.slice(0,6).join(' '),3),pedText=ped.length?ped.map(e=>'• '+e.title+': '+e.practice).join('\n'):'• Recupera primero sin mirar, comprueba y corrige.\n• Distribuye el repaso; vuelve antes a lo que fallaste.';
+ const method=[
+  'PLAN DE ESTUDIO LOCAL — HEURÍSTICO, NO IA',
+  'Material: '+name+(subject?' · '+subject:'')+' · '+rawWords.toLocaleString('es')+' palabras',
+  'Estructura detectada: '+sections.length+' bloque(s) de origen; ruta de '+sessionCount+' sesiones de '+duration+' minutos.',
+  'OBJETIVO FINAL: explicar las ideas centrales con tus palabras, relacionarlas sin inventar conexiones, aplicar al menos una a un caso y respaldar respuestas con frases del documento.',
+  'ORDEN PEDAGÓGICO: '+topics.map((t,i)=>(i+1)+'. '+t.title+' → '+stages[stageIndex(i,sessionCount)].name).join(' | '),
+  'Principios para estudiar: '+pedText,
+  '',
+  ...lines,
+  '',
+  'REPASO ESPACIADO: día 1, día 3 y día 7 ('+review+' min). Empieza con una hoja en blanco o preguntas; consulta después y repasa los errores, no releas todo.',
+  'EVALUACIÓN FINAL: 5 preguntas — definición/idea, relación entre conceptos, reconstrucción del proceso o esquema, aplicación a un caso y evidencia textual. Meta: 4/5 correctas y dos respuestas respaldadas por una frase. Si no llegas, repite la sesión correspondiente.',
+  'REGISTRO DE PROGRESO: por sesión anota puntuación /6, concepto que fallaste y si ya puedes explicarlo sin mirar. Marca dominio solo con 5/6 o más en dos intentos separados.',
+  'CONTROL DE CALIDAD: la extracción, segmentación y selección de conceptos son heurísticas locales. Revisa títulos, fragmentos y preguntas. Si el archivo es escaneado, tiene tablas complejas o la extracción pierde el orden, la guía puede ser incompleta; Studium no añade conocimiento externo.'
+ ].join('\n');
+ return{name,subject,source:raw,summary,outline,terms,cards,questions:[...new Set(questions)].slice(0,10),method,sessionCount,minutesPerSession:duration};
+}

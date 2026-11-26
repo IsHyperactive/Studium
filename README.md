@@ -6,7 +6,7 @@ Studium es una aplicación de escritorio local-first para organizar el aprendiza
 
 - Importa PDF, EPUB, DOCX, TXT y Markdown; la extracción se realiza en el dispositivo.
 - Genera un resumen diverso, esquema, conceptos clave, preguntas y tarjetas vinculadas a fragmentos del archivo.
-- El plan local organiza entre 2 y 5 sesiones según extensión/estructura, con objetivos observables, bloques de tiempo, recuperación activa, práctica, checkpoints, registro de errores y repasos espaciados.
+- El plan local crea una ruta progresiva de 2–5 sesiones vinculadas a los encabezados y fragmentos detectados: objetivos observables, lectura selectiva, producción activa, checkpoints puntuados, corrección de errores y repaso espaciado. Cada sesión requiere 5/6 puntos y el dominio se marca tras dos intentos separados.
 - Utiliza un corpus pedagógico local para orientar el plan. No es IA y no modifica pesos de modelos; el tutor IA todavía no está conectado a la interfaz.
 - Los PDF escaneados requieren OCR, aún no incluido. Revisa los fragmentos y el plan: las heurísticas pueden omitir o interpretar mal texto extraído.
 

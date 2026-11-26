@@ -125,6 +125,29 @@ jobs:
           $subsystem = [BitConverter]::ToUInt16($bytes, $peOffset + 24 + 68)
           if ($subsystem -ne 2) { throw "Executable is console subsystem ($subsystem)" }
           Write-Host "Direct GUI executable verified: $subsystem"
+      - name: Smoke test de arranque gráfico (Windows x64)
+        if: matrix.arch == 'x64'
+        shell: pwsh
+        run: |
+          $exe = Resolve-Path "src-tauri/target/${{ matrix.target }}/release/studium.exe"
+          $p = Start-Process -FilePath $exe -PassThru
+          try {
+            $deadline = (Get-Date).AddSeconds(20)
+            do {
+              $p.Refresh()
+              if ($p.HasExited) { throw "Studium terminó al arrancar con código $($p.ExitCode)" }
+              if ($p.MainWindowHandle -ne 0) { break }
+              Start-Sleep -Seconds 1
+            } while ((Get-Date) -lt $deadline
+            if ($p.MainWindowHandle -eq 0) { throw "No se detectó una ventana principal de Studium tras 20 segundos" }
+            Write-Host "GUI smoke test passed: PID=$($p.Id), HWND=$($p.MainWindowHandle)"
+          } finally {
+            if (!$p.HasExited) {
+              if (!$p.CloseMainWindow()) { $p.Kill() }
+              Start-Sleep -Seconds 2
+              if (!$p.HasExited) { $p.Kill() }
+            }
+          }
       - name: Preparar asset con arquitectura en el nombre
         shell: pwsh
         run: |

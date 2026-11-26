@@ -15,7 +15,7 @@ Aplicación local-first de escritorio, sin backend, cuenta ni sincronización.
 
 - Extracción local de PDF, EPUB, DOCX, TXT y Markdown.
 - src/study-plan.ts detecta encabezados, agrupa texto en bloques, selecciona términos y fragmentos, construye un resumen diverso, preguntas y tarjetas con evidencia.
-- El plan calcula entre 2 y 5 sesiones según extensión/estructura, reparte minutos de forma exacta y usa objetivos observables, recuperación activa, estudio dirigido, práctica, checkpoint y registro de errores.
+- El plan construye una ruta progresiva de 2–5 sesiones basada en secciones detectadas, términos y fragmentos literales. Cada sesión incluye objetivo contextual, foco, recuperación, lectura selectiva, actividad activa, checkpoint de 6 puntos y corrección. Distribuye el tiempo exactamente; dominio 5/6 en dos intentos separados y evaluación final 4/5 con evidencia.
 - Recupera hasta tres principios del corpus src/knowledge-base.ts y los incorpora como orientación pedagógica. Es heurístico local; no es IA ni entrenamiento de pesos.
 - tests/study-plan.test.mjs verifica encabezados, evidencia, tarjetas, resumen, preguntas, texto sin encabezados, errores de extracción, duración y escalado.
 - PDF escaneados requieren OCR no incluido; las heurísticas pueden producir resultados incompletos.
