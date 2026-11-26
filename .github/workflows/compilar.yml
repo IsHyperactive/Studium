@@ -243,7 +243,7 @@ jobs:
             echo "- Importa PDF, EPUB, DOCX, TXT y Markdown y extrae texto en el dispositivo."
             echo "- Genera resumen, esquema, conceptos clave, preguntas y un plan de estudio."
             echo "- Crea tarjetas de repaso automáticamente y guarda una guía en la Biblioteca."
-            echo "- El análisis es heurístico local, no IA. Los PDF escaneados requieren OCR, que aún no está incluido."
+            echo "- El Profesor IA conectado puede enseñar por niveles, recuperar fragmentos de la Biblioteca, crear quizzes progresivos y generar guías de estudio. Requiere un modelo/proveedor configurado; no incluye un modelo propio ni fine-tuning."\n            echo "- Si la IA no está disponible, la guía puede recurrir a un método heurístico local. Los PDF escaneados requieren OCR, que aún no está incluido."
             echo
             echo "## Descargas"
             echo "| Plataforma | Arquitectura | Formato |"
@@ -269,7 +269,7 @@ jobs:
             echo "- Workflow: [Ver compilación](${RUN_URL})"
             echo
             echo "## Limitaciones conocidas"
-            echo "MVP en desarrollo: no incluye OCR para PDF escaneados, generación con IA, exámenes, audio, anotación con lápiz, sincronización ni cuentas. La extracción y generación de guías desde archivos es local y heurística."
+            echo "Limitaciones: no incluye OCR para PDF escaneados, modelo IA integrado ni fine-tuning, audio, anotación con lápiz, sincronización ni cuentas. El Profesor IA requiere conectar un modelo; las respuestas y evaluaciones pueden equivocarse. La generación local de respaldo es heurística."
             echo
             echo "## Sobre la versión"
             echo "Lanzamiento oficial estable de Studium 0.1.1. Incluye únicamente paquetes portables de escritorio. No incluye instaladores, DEB, DMG, APK ni versiones duplicadas."
