@@ -111,30 +111,22 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & $signTool.FullName verify /pa /v $exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Crear ZIP portable
+      - name: Verificar ejecutable directo GUI
         shell: pwsh
         run: |
-          $out = "Studium-Windows-${{ matrix.arch }}-Portable"
-          Compress-Archive -Path "$out/*" -DestinationPath "$out.zip" -Force
-      - name: Verificar que el ZIP final contiene un ejecutable GUI
-        shell: pwsh
-        run: |
-          $out = "Studium-Windows-${{ matrix.arch }}-Portable"
-          $check = Join-Path $env:RUNNER_TEMP "Studium-check-${{ matrix.arch }}"
-          Expand-Archive -Path "$out.zip" -DestinationPath $check -Force
-          $exe = Join-Path $check "Studium.exe"
-          if (!(Test-Path $exe)) { throw "Portable ZIP has no Studium.exe" }
+          $exe = "Studium-Windows-${{ matrix.arch }}-Portable/Studium.exe"
+          if (!(Test-Path $exe)) { throw "Executable missing: $exe" }
           $bytes = [IO.File]::ReadAllBytes($exe)
           $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
-          if ([BitConverter]::ToUInt32($bytes, $peOffset) -ne 0x00004550) { throw "Invalid PE signature in ZIP" }
+          if ([BitConverter]::ToUInt32($bytes, $peOffset) -ne 0x00004550) { throw "Invalid PE signature" }
           $subsystem = [BitConverter]::ToUInt16($bytes, $peOffset + 24 + 68)
-          if ($subsystem -ne 2) { throw "Portable ZIP executable is console subsystem ($subsystem)" }
-          Write-Host "Portable ZIP GUI subsystem verified: $subsystem"
-      - name: Subir paquete
+          if ($subsystem -ne 2) { throw "Executable is console subsystem ($subsystem)" }
+          Write-Host "Direct GUI executable verified: $subsystem"
+      - name: Subir ejecutable directo
         uses: actions/upload-artifact@v4
         with:
           name: Studium-Windows-${{ matrix.arch }}-Portable
-          path: Studium-Windows-${{ matrix.arch }}-Portable.zip
+          path: Studium-Windows-${{ matrix.arch }}-Portable/Studium.exe
           if-no-files-found: error
           retention-days: 14
 
@@ -282,15 +274,15 @@ jobs:
             echo "## Descargas"
             echo "| Plataforma | Arquitectura | Formato |"
             echo "|---|---|---|"
-            echo "| Windows | x64 | ZIP portable |"
-            echo "| Windows | ARM64 | ZIP portable |"
+            echo "| Windows | x64 | EXE directo |"
+            echo "| Windows | ARM64 | EXE directo |"
             echo "| Linux | x64 | AppImage |"
             echo "| Linux | ARM64 | AppImage |"
             echo "| macOS | Intel x64 | ZIP con .app |"
             echo "| macOS | Apple Silicon ARM64 | ZIP con .app |"
             echo
             echo "## Uso"
-            echo "- Windows: extrae el ZIP y abre Studium.exe. Requiere WebView2."
+            echo "- Windows: descarga Studium.exe y ejecútalo directamente. Requiere WebView2."
             echo "- Linux: concede permiso de ejecución al AppImage y ábrelo. Puede necesitar FUSE 2."
             echo "- macOS: extrae el ZIP y mueve/abre Studium.app. No está firmado ni notarizado."
             echo "- Los datos se conservan en el directorio portable de Studium. Mantén el directorio completo."
@@ -306,7 +298,7 @@ jobs:
             echo "Limitaciones: no incluye OCR para PDF escaneados, IA integrada, exámenes, audio, anotación con lápiz, sincronización ni cuentas. El plan de estudio es heurístico local y puede omitir detalles; revisa las evidencias y preguntas antes de usarlo."
             echo
             echo "## Sobre la versión"
-            echo "Lanzamiento oficial estable de Studium 0.1.1. Incluye únicamente paquetes portables de escritorio. No incluye instaladores, DEB, DMG, APK ni versiones duplicadas."
+            echo "Lanzamiento oficial estable de Studium 0.1.1. Windows ofrece ejecutables EXE directos; Linux AppImage y macOS apps portables en ZIP. No incluye instaladores, DEB, DMG, APK ni versiones duplicadas."
           } > RELEASE_NOTES.md
       - name: Alinear tag oficial con el commit verificado
         env:
@@ -335,7 +327,7 @@ jobs:
           test "$(jq -r .prerelease <<< "$release")" = "false"
           test "$(jq -r .tag_name <<< "$release")" = "v0.1.1"
           assets="$(jq -r '.assets[].name' <<< "$release")"
-          for expected in "Studium-Windows-x64-Portable.zip" "Studium-Windows-arm64-Portable.zip" "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage" "Studium-macOS-x64-Portable.zip" "Studium-macOS-arm64-Portable.zip" "RELEASE_NOTES.md" "SHA256SUMS.txt"; do
+          for expected in "Studium-Windows-x64.exe" "Studium-Windows-arm64.exe" "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage" "Studium-macOS-x64-Portable.zip" "Studium-macOS-arm64-Portable.zip" "RELEASE_NOTES.md" "SHA256SUMS.txt"; do
             grep -Fxq "$expected" <<< "$assets" || { echo "Falta asset: $expected"; exit 1; }
           done
           echo "Release estable v0.1.1 verificada con los ocho assets esperados."
@@ -350,9 +342,10 @@ jobs:
           cd "${check}"
           sha256sum -c SHA256SUMS.txt
           test "$(wc -l < SHA256SUMS.txt)" -eq 6
-          for name in "Studium-Windows-x64-Portable.zip" "Studium-Windows-arm64-Portable.zip"; do
+          for name in "Studium-Windows-x64.exe" "Studium-Windows-arm64.exe"; do
             test -s "${name}"
-            unzip -l "${name}" | grep -Eq 'Studium.exe$'
+            file "${name}" | grep -q PE32
+            python3 -c 'import struct,sys; d=open(sys.argv[1],"rb").read(); p=struct.unpack_from("<I",d,0x3c)[0]; assert d[p:p+4]==b"PE\\0\\0"; assert struct.unpack_from("<H",d,p+24+68)[0]==2, "GUI subsystem not set"' "${name}"
           done
           for name in "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage"; do
             test -s "${name}"
@@ -373,7 +366,7 @@ jobs:
         run: |
           set -euo pipefail
           release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v0.1.1" --jq .id)"
-          expected=( "RELEASE_NOTES.md" "SHA256SUMS.txt" "Studium-Windows-x64-Portable.zip" "Studium-Windows-arm64-Portable.zip" "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage" "Studium-macOS-x64-Portable.zip" "Studium-macOS-arm64-Portable.zip" )
+          expected=( "RELEASE_NOTES.md" "SHA256SUMS.txt" "Studium-Windows-x64.exe" "Studium-Windows-arm64.exe" "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage" "Studium-macOS-x64-Portable.zip" "Studium-macOS-arm64-Portable.zip" )
           while IFS=$'\t' read -r asset_id asset_name; do
             [ -z "${asset_id}" ] && continue
             if ! printf '%s\n' "${expected[@]}" | grep -Fxq "${asset_name}"; then
