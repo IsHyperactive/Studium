@@ -8,10 +8,12 @@ Studium es una aplicación de escritorio local-first para organizar el aprendiza
 - Genera un resumen diverso, esquema, conceptos clave, preguntas y tarjetas vinculadas a fragmentos del archivo.
 - El plan local divide el material en 2–24 lecciones adaptativas (aprox. 350 palabras o una sección), conserva el orden del documento y cubre cada capítulo con preguntas específicas. Cada lección incluye objetivos observables, evidencia, preguntas de comprensión, recuperación activa, lectura selectiva, práctica, checkpoint de 6 puntos y corrección; muestra alertas cuando faltan encabezados o conceptos. El dominio requiere 5/6 en dos intentos separados.
 - Utiliza un corpus pedagógico local para orientar las actividades. No es IA ni comprensión humana: la segmentación y selección de preguntas son heurísticas. Studium aún no conecta un modelo generativo al creador de planes; no inventa contenido externo y muestra limitaciones de extracción.
+- Tutor IA integrado: chat con proveedor OpenAI-compatible (Ollama local, OpenAI o endpoint personalizado), conexión configurable, contexto recuperado de tu biblioteca, instrucciones de tutoría, recuperación de principios pedagógicos y conversación local. El tutor no está incluido como modelo ni se entrena: debes conectar/instalar un modelo y puede cometer errores. La clave API se guarda en el almacenamiento local del navegador/app y no se exporta en el backup.
 - Los PDF escaneados requieren OCR, aún no incluido. Revisa los fragmentos y el plan: las heurísticas pueden omitir o interpretar mal texto extraído.
 
 ## Funciones
 
+- Tutor IA: chat configurable y tutoría contextual a partir de tus materiales, con prompts de explicación, quiz, conexiones y diagnóstico de lagunas.
 - Biblioteca: crear, editar, eliminar, buscar y filtrar materiales por materia.
 - Notas y enlaces.
 - Tarjetas pregunta/respuesta y repaso por intervalos básicos.
