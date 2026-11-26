@@ -5,7 +5,7 @@ export function pdfTextItemsToText(items:readonly PdfTextItem[]):string{
 export function normalizeExtractedText(value:string):string{
  return value.replace(/\u0000/g,'').replace(/\r\n?/g,'\n')
   .split('\n').map(line=>line.replace(/[ \t]+/g,' ').trim()).join('\n')
-  .replace(/\n{3,}/g,'\n\n').trim();
+  .replace(/\s+([,.;:!?])/g,'$1').replace(/\n{3,}/g,'\n\n').trim();
 }
 function decodeHtmlEntities(text:string):string{
  return text.replace(/&#x([0-9a-f]+);/gi,(_,hex)=>String.fromCodePoint(parseInt(hex,16)))
