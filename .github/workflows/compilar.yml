@@ -15,7 +15,27 @@ permissions:
   contents: read
 
 jobs:
+  cancelar_obsoletas:
+    name: Cancelar builds anteriores
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - name: Cancelar otros runs de compilación
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CURRENT_RUN: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          stale_runs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?per_page=100" --jq ".workflow_runs[] | select(.id != ${CURRENT_RUN} and .path == \".github/workflows/compilar.yml\" and .status != \"completed\") | .id")"
+          while IFS= read -r run_id; do
+            [ -z "$run_id" ] && continue
+            gh api --silent -X POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel" || true
+          done <<< "$stale_runs"
+
   windows:
+    needs: [cancelar_obsoletas]
     name: Windows ${{ matrix.arch }} · Portable
     runs-on: windows-2022
     strategy:
@@ -77,6 +97,7 @@ jobs:
           retention-days: 14
 
   linux:
+    needs: [cancelar_obsoletas]
     name: Linux ${{ matrix.arch }} · AppImage
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -120,6 +141,7 @@ jobs:
           retention-days: 14
 
   macos:
+    needs: [cancelar_obsoletas]
     name: macOS ${{ matrix.arch }} · Portable
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -170,7 +192,6 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
-      actions: write
     steps:
       - uses: actions/checkout@v4
       - name: Descargar solo los paquetes portables
@@ -219,17 +240,6 @@ jobs:
             echo "## Limitaciones conocidas"
             echo "Studium sigue en desarrollo. No incluye instaladores ni Android en esta distribución portable."
           } > RELEASE_NOTES.md
-      - name: Cancelar compilaciones obsoletas
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CURRENT_RUN: ${{ github.run_id }}
-        run: |
-          set -euo pipefail
-          stale_runs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?per_page=100" --jq ".workflow_runs[] | select(.id != ${CURRENT_RUN} and .path == \".github/workflows/compilar.yml\" and .status != \"completed\") | .id")"
-          while IFS= read -r run_id; do
-            [ -z \"$run_id\" ] && continue
-            gh api --silent -X POST \"repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel\" || true
-          done <<< \"$stale_runs\"
       - name: Eliminar releases y tags anteriores
         env:
           GH_TOKEN: ${{ github.token }}
