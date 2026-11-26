@@ -140,7 +140,7 @@ jobs:
             runner: macos-15-intel
             target: x86_64-apple-darwin
           - arch: arm64
-            runner: macos-14
+            runner: macos-15
             target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v4
@@ -235,8 +235,15 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: Studium-*
-          path: release-assets
-          merge-multiple: true
+          path: release-artifacts
+      - name: Preparar assets con nombres de plataforma
+        run: |
+          mkdir -p release-assets
+          find release-artifacts -type f -print0 | while IFS= read -r -d '' file; do
+            group="$(basename "$(dirname "$file")")"
+            filename="$(basename "$file")"
+            cp "$file" "release-assets/${group}-${filename}"
+          done
       - name: Generar notas, inventario y hashes
         env:
           VERSION: 0.1.0
