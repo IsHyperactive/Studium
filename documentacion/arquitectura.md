@@ -9,7 +9,7 @@ MVP local-first de escritorio, distribuido en una sola release portable. No tien
 - CSS adaptable y modo claro/oscuro del sistema.
 - JSON local portable `Studium-data.json`; localStorage queda como respaldo/migración para navegador.
 
-## Funciones implementadas
+## Base de conocimiento pedagógica\n- `src/knowledge-base.ts`: corpus original de principios de aprendizaje, tutoría, planificación, evaluación, lenguas, ciencias, humanidades, fiabilidad, privacidad y accesibilidad. Recuperación por coincidencia de términos para añadir contexto relevante.\n- `src/ai.ts`: `learningSystemPrompt()` combina el rol tutor con artículos recuperados y contexto de materiales del estudiante.\n- No modifica los pesos de un modelo ni entrena una IA; aporta conocimiento contextual (RAG ligero). La conexión del tutor a la interfaz y la ejecución de proveedor IA siguen pendientes.\n\n## Funciones implementadas
 - Materiales CRUD, búsqueda, filtros por materia y tipos.
 - Editor sencillo de apuntes y enlaces.
 - Tarjetas de repaso con intervalos básicos.
