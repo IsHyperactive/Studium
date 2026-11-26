@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: studium-portable-${{ github.ref }}-${{ github.run_id }}
+  group: studium-portable-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
