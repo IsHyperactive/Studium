@@ -32,7 +32,7 @@ export async function requestAI(settings:AISettings,key:string,messages:{role:'s
 }
 export async function generateStudy(settings:AISettings,key:string,name:string,subject:string,source:string){
  const prompt='Crea un método de estudio eficaz y fiel al material. Define objetivos observables, prerequisitos, bloques con tiempo y actividades concretas, recuperación activa sin mirar, ejemplos de aplicación, preguntas progresivas, errores frecuentes y repaso espaciado. No rellenes con frases genéricas ni inventes datos. Devuelve JSON puro: summary, outline (array), terms (array), cards (array {front,back}), questions (array), method.\\nArchivo: '+name+'\\nMateria: '+subject+'\\nContenido:\\n'+source.slice(0,24000);
- const raw=await requestAI(settings,key,[{role:'system',content:STUDIUM_LEARNING_CORE+' Genera JSON estricto, sin markdown.'},{role:'user',content:prompt}]);
+ const raw=await requestAI(settings,key,[{role:'system',content:STUDIUM_LEARNING_CORE+'\\n'+STUDIUM_METHODS_DB+'\\nGenera JSON estricto, sin markdown.'},{role:'user',content:prompt}]);
  const start=raw.indexOf('{'),end=raw.lastIndexOf('}');if(start<0||end<=start)throw new Error('No recibí un resultado estructurado del modelo.');
  const data=JSON.parse(raw.slice(start,end+1));
  return {summary:String(data.summary||''),outline:Array.isArray(data.outline)?data.outline.map(String):[],terms:Array.isArray(data.terms)?data.terms.map(String):[],cards:Array.isArray(data.cards)?data.cards.map((x:any)=>({front:String(x.front||''),back:String(x.back||'')})).filter((x:any)=>x.front&&x.back).slice(0,20):[],questions:Array.isArray(data.questions)?data.questions.map(String).slice(0,15):[],method:String(data.method||'')};
