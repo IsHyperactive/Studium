@@ -120,7 +120,6 @@ jobs:
           retention-days: 14
 
   macos:
-    needs: [cancelar_obsoletas]
     name: macOS ${{ matrix.arch }} · Portable
     runs-on: ${{ matrix.runner }}
     strategy:
