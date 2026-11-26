@@ -85,7 +85,7 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
   if(focus.length>=2)questions.push('¿Cómo se relacionan «'+focus[0]+'» y «'+focus[1]+'» según el archivo? Si no hay relación explícita, explica por separado y señala tu inferencia.');
   if(evidence)questions.push('¿Qué idea central expresa este fragmento y qué evidencia aporta? Reescríbelo sin copiar: «'+evidence+'»');
  }
- questions.push('Aplica una idea del material a un caso nuevo: explica el razonamiento y qué fragmento respalda el concepto (no inventes hechos).');
+ questions.push('Aplica una idea del material a un caso hipotético: explica el razonamiento y qué fragmento respalda el concepto (no inventes hechos).');
  questions.push('Sin consultar, reconstruye el esquema y resume el documento en 5–7 frases; compara después y anota lo que omitiste');
  const [recall,studyTime,practice,check,log]=minuteSplit(duration);
  const lines=topics.map((topic,i)=>{
@@ -139,5 +139,5 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
   'REGISTRO DE PROGRESO: por sesión anota puntuación /6, concepto que fallaste y si ya puedes explicarlo sin mirar. Marca dominio solo con 5/6 o más en dos intentos separados.',
   'CONTROL DE CALIDAD: la extracción, segmentación y selección de conceptos son heurísticas locales. Revisa títulos, fragmentos y preguntas. Si el archivo es escaneado, tiene tablas complejas o la extracción pierde el orden, la guía puede ser incompleta; Studium no añade conocimiento externo.'
  ].join('\n');
- return{name,subject,source:raw,summary,outline,terms,cards,questions:[...new Set(questions)].slice(0,10),method,sessionCount,minutesPerSession:duration,warnings};
+ return{name,subject,source:raw,summary,outline,terms,cards,questions:[...new Set([...questions.slice(0,8),...questions.slice(-2)])].slice(0,10),method,sessionCount,minutesPerSession:duration,warnings};
 }
