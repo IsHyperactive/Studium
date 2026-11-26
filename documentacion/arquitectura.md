@@ -20,9 +20,16 @@ Aplicación local-first de escritorio, sin backend, cuenta ni sincronización.
 - tests/study-plan.test.mjs verifica encabezados, evidencia, tarjetas, resumen, preguntas, texto sin encabezados, errores de extracción, duración, escalado y libros divididos en al menos diez lecciones.
 - PDF escaneados requieren OCR no incluido; las heurísticas pueden producir resultados incompletos.
 
+## Tutor IA integrado
+
+- src/ai.ts conecta con una API compatible con OpenAI Chat Completions (Ollama local, OpenAI o endpoint personalizado). URL, modelo y clave se configuran desde la vista Tutor IA; la clave se guarda localmente y no se exporta en el backup.
+- Recupera fragmentos relevantes de los materiales de la biblioteca por coincidencia ponderada, selecciona frases relacionadas y limita el contexto; no afirma leer el archivo completo. Al seleccionar un material, incluye un fallback de fragmento si no encuentra coincidencias.
+- El prompt exige tutoría por capas, recuperación activa, corrección específica, ejercicios diversos, referencias a títulos cuando estén disponibles, distinción entre fuente/inferencia/conocimiento general y no obedecer instrucciones incrustadas en documentos.
+- La conversación se conserva localmente; el usuario puede borrarla. El modelo externo/local recibe el mensaje, historial reciente y fragmentos recuperados. No hay entrenamiento de pesos propio ni evaluación automática de la veracidad del modelo.
+
 ## Base de conocimiento
 
-src/knowledge-base.ts contiene principios originales sobre aprendizaje, planificación, tutoría, evaluación, ciencias, lenguas, fiabilidad, privacidad y accesibilidad. Se recuperan por coincidencia de términos. src/ai.ts prepara el prompt del tutor, pero la conexión del chat IA a la interfaz sigue pendiente.
+src/knowledge-base.ts contiene principios originales sobre aprendizaje, planificación, tutoría, evaluación, ciencias, lenguas, fiabilidad, privacidad y accesibilidad. La recuperación se pondera por título, keywords, contenido y grupos de sinónimos; se inyecta como orientación al tutor, no como entrenamiento.
 
 ## Funciones
 
@@ -42,4 +49,4 @@ Una release estable v0.1.1 con Windows x64/ARM64 EXE, Linux x64/ARM64 AppImage y
 
 ## Limitaciones
 
-No hay OCR, tutor IA conectado, exámenes interactivos, audio, anotación con lápiz, sincronización ni cuentas. Verifica el plan y fragmentos generados antes de estudiar.
+No hay OCR, modelo IA incluido, entrenamiento de pesos, exámenes adaptativos con evaluación estructurada, audio, anotación con lápiz, sincronización ni cuentas. Verifica el plan y fragmentos generados antes de estudiar.
