@@ -8,7 +8,7 @@ import {defaultAI, STUDIUM_LEARNING_CORE, rankContext, requestAI, type AISetting
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 type Material={id:string,title:string,subject:string,type:'note'|'book'|'link'|'file',content:string,url?:string,created:number,updated:number};
 type Flash={id:string,front:string,back:string,subject:string,due:number,interval:number,reps:number};
-type GeneratedStudy={name:string,subject:string,source:string,summary:string,outline:string[],terms:string[],cards:{front:string,back:string}[],questions:string[],method:string};
+type GeneratedStudy={name:string,subject:string,source:string,summary:string,outline:string[],terms:string[],cards:{front:string,back:string}[],questions:string[],method:string,aiUsed?:boolean};
 type Study={id:string,subject:string,minutes:number,date:number};
 type Store={materials:Material[],cards:Flash[],sessions:Study[],goal:number,streak:number,lastDay:string,chat:AIMessage[]};
 const KEY='studium-local-v1',AI_KEY='studium-ai-settings-v1',base:Store={materials:[],cards:[],sessions:[],goal:30,streak:0,lastDay:'',chat:[]};
