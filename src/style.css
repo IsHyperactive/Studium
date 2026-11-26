@@ -168,3 +168,11 @@ button:has(.ui-icon){padding-inline:12px}
  .upload-drop{padding:20px 12px}
  .upload-panel,.method-explainer{padding:16px}
 }
+
+.answer-key{margin:12px 8px 16px;border:1px solid var(--line);border-radius:12px;background:var(--paper);overflow:hidden}
+.answer-key>summary{padding:12px 15px;cursor:pointer;font-weight:700;color:var(--accent)}
+.answer-key[open]>summary{border-bottom:1px solid var(--line)}
+.answer-key .study-plan{border:0;margin:0;padding:16px 18px;background:transparent}
+.study-session{margin:12px 0}
+.study-session>summary{padding:17px 20px}
+.study-session .study-plan{padding:18px 20px}
