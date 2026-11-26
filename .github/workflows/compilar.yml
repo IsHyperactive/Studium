@@ -88,10 +88,10 @@ jobs:
       matrix:
         include:
           - arch: x64
-            runner: ubuntu-24.04
+            runner: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-22.04-arm
             target: aarch64-unknown-linux-gnu
     steps:
       - uses: actions/checkout@v4
@@ -101,7 +101,7 @@ jobs:
       - name: Instalar dependencias del sistema
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libwebkit2gtk-4.1-dev
+          sudo apt-get install -y build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf libwebkit2gtk-4.1-dev libfuse2
       - name: Dependencias
         run: npm install
       - name: Iconos
