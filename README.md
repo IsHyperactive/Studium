@@ -14,7 +14,8 @@ Studium es un espacio local-first para organizar el aprendizaje. Sin cuentas, si
 - Conecta un proveedor compatible con la API Chat Completions: Ollama local o API remota compatible. No se incluye modelo de IA dentro del instalador.
 - La URL, modelo y temperatura se guardan localmente; la clave API solo se conserva en memoria durante la sesión.
 - Al usar IA, el texto de tus materiales se envía al proveedor configurado. Si quieres privacidad local, utiliza un modelo local en Ollama.
-- Quizzes interactivos de una pregunta por turno, feedback, puntuación y ajuste de dificultad según respuesta.\n- Si la IA falla, la guía usa heurísticas locales como respaldo; se indica qué modo la generó.
+- Quizzes interactivos de una pregunta por turno, feedback, puntuación y ajuste de dificultad según respuesta.
+- Si la IA falla, la guía usa heurísticas locales como respaldo; se indica qué modo la generó.
 - Los PDF escaneados requieren OCR; todavía no está incluido.
 
 ## Funciones disponibles
