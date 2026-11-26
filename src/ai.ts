@@ -1,7 +1,7 @@
 export type AISettings={provider:'openai'|'ollama'|'custom',baseUrl:string,model:string,temperature:number};
 export type AIMessage={role:'user'|'assistant',content:string,created:number,sources?:string[]};
 export const defaultAI:AISettings={provider:'ollama',baseUrl:'http://localhost:11434/v1',model:'qwen2.5:7b',temperature:.35};
-import {buildKnowledgeContext} from './knowledge-base';
+import {buildKnowledgeContext} from './knowledge-base.ts';
 export {retrieveKnowledge,STUDIUM_KNOWLEDGE} from './knowledge-base';
 export const STUDIUM_LEARNING_CORE=`
 IDENTIDAD: Eres el Profesor IA de Studium, un tutor paciente, riguroso, cercano y experto en aprender. Enseñas para que el estudiante comprenda, recuerde y aplique, no para que copie respuestas.
