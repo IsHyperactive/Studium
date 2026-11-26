@@ -6,6 +6,13 @@
 
 Studium es un espacio local-first para organizar el aprendizaje. Sin cuentas, sin sincronización obligatoria y con una distribución **portable**: extrae/abre el paquete y conserva el archivo de datos junto a la aplicación.
 
+## Función principal: crear método desde un archivo
+- Importa PDF, EPUB, DOCX, TXT y Markdown.
+- Extrae texto localmente y genera un resumen, esquema, conceptos clave, preguntas de práctica y un plan de estudio.
+- Crea tarjetas de recuerdo automáticamente y las añade a Repaso.
+- Guarda la guía y el material importado en Biblioteca.
+- Los PDF escaneados requieren OCR; todavía no está incluido.
+
 ## Funciones disponibles
 - Biblioteca: crear, editar, eliminar y buscar materiales; filtrar por materia; guardar apuntes, libros, enlaces y recursos.
 - Notas: editor de texto sencillo.
@@ -14,7 +21,7 @@ Studium es un espacio local-first para organizar el aprendizaje. Sin cuentas, si
 - Progreso: minutos diarios, objetivo, materiales, tarjetas pendientes y materias.
 - Respaldo: exportar/importar JSON y borrar los datos locales.
 
-**Limitaciones:** no hay importación real de PDF/EPUB, OCR, exámenes, IA, audio, anotaciones con lápiz, sync ni cuentas. Es un MVP; algunas funciones necesitan pruebas en dispositivos reales.
+**Limitaciones:** el método se genera con heurísticas locales (no IA); no hay OCR para documentos escaneados, exámenes, audio, anotaciones con lápiz, sincronización ni cuentas. Es un MVP; algunas funciones necesitan pruebas en dispositivos reales.
 
 ## Distribución portable única
 Cada compilación reemplaza la release anterior. No se publican instaladores, DEB, DMG, APK ni archivos duplicados.
@@ -33,7 +40,7 @@ Cada compilación reemplaza la release anterior. No se publican instaladores, DE
 ## Datos y portabilidad
 En la app de escritorio, Studium crea `Studium-data.json` en la carpeta portable junto al ejecutable (en macOS, junto al `.app`). Mantén ese archivo con la app al moverla. También puedes exportar un respaldo desde Ajustes.
 
-- Windows: necesita WebView2 Runtime.
+- Windows: necesita WebView2 Runtime. La firma Authenticode se activa si se configuran `WINDOWS_SIGNING_CERT_BASE64` y `WINDOWS_SIGNING_CERT_PASSWORD` en GitHub Secrets. Sin certificado, el ejecutable sigue sin firma y SmartScreen puede mostrar avisos; una firma válida tampoco garantiza eliminar advertencias de reputación.
 - Linux AppImage: puede requerir FUSE 2.
 - macOS: paquete sin firma/notarización; Gatekeeper puede mostrar una advertencia.
 - La carpeta debe permitir escritura. No ejecutes la portable desde una carpeta de solo lectura.
