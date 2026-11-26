@@ -58,6 +58,7 @@ test('un libro con capítulos se divide en muchas lecciones con preguntas por ca
  assert.ok(p.sessionCount<=24,'La granularidad tiene un límite razonable');
  assert.ok(p.outline.length>=10,'La ruta conserva capítulos separados');
  assert.ok(p.questions.length>=20,'Debe incluir preguntas específicas por lección');
+ assert.ok(p.method.includes('PREGUNTAS DE LA LECCIÓN:'),'Cada sesión debe mostrar ejercicios específicos');
  for(let i=1;i<=10;i++)assert.ok(p.method.includes('Capítulo '+i),'La sesión debe cubrir capítulo '+i);
  const stages=p.method.match(/SESIÓN \d+ · ([^—]+) —/g)||[];
  assert.ok(stages.length>=10);
