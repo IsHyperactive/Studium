@@ -108,14 +108,14 @@ jobs:
       - name: Instalar dependencias frontend
         run: npm install
 
-      - name: Generar iconos Android
-        run: npm run icons
-
       - name: Compilar frontend
         run: npm run build
 
       - name: Inicializar proyecto Android
         run: npm run tauri android init -- --ci
+
+      - name: Generar iconos Android
+        run: npm run icons
 
       - name: Compilar APK ARM64
         run: npm run tauri android build -- --apk --target aarch64 --ci
