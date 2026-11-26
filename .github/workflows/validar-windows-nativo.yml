@@ -1,0 +1,62 @@
+name: Validar Studium nativo para Windows
+on:
+  push:
+    branches: [feature/ai-learning-experience]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: validar-windows-nativo-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  windows:
+    name: Windows ${{ matrix.arch }} · compilación nativa
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            target: x86_64-pc-windows-msvc
+          - arch: ARM64
+            target: aarch64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalar herramientas de compilación ARM64
+        if: matrix.arch == 'ARM64'
+        shell: pwsh
+        run: |
+          $installer = "${env:ProgramFiles(x86)}\\Microsoft Visual Studio\\Installer\\vs_installer.exe"
+          $vswhere = "${env:ProgramFiles(x86)}\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+          $vs = & $vswhere -latest -property installationPath
+          & $installer modify --installPath "$vs" --add Microsoft.VisualStudio.Component.VC.Tools.ARM64 --quiet --wait --norestart
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Instalar dependencias
+        run: npm install
+      - name: Generar iconos Tauri
+        run: npm run icons
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Verificar TypeScript
+        run: npm run typecheck
+      - name: Verificar tests
+        run: npm run test
+      - name: Compilar frontend
+        run: npm run build
+      - name: Compilar ejecutable Tauri nativo (sin instalador)
+        run: cargo build --manifest-path src-tauri/Cargo.toml --release --target ${{ matrix.target }}
+      - name: Verificar que el ejecutable no abre consola
+        shell: pwsh
+        run: |
+          $exe = "src-tauri/target/${{ matrix.target }}/release/studium.exe"
+          if (!(Test-Path $exe)) { throw "Executable missing: $exe" }
+          $bytes = [IO.File]::ReadAllBytes($exe)
+          $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+          if ([BitConverter]::ToUInt32($bytes, $peOffset) -ne 0x00004550) { throw "Invalid PE signature" }
+          $subsystem = [BitConverter]::ToUInt16($bytes, $peOffset + 24 + 68)
+          if ($subsystem -ne 2) { throw "Expected GUI subsystem (2), got $subsystem" }
+          Write-Host "Verified native Windows GUI binary for ${{ matrix.arch }}."
