@@ -5,7 +5,7 @@ import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import JSZip from 'jszip';
 import mammoth from 'mammoth';
 import {createLocalStudyPlan} from './study-plan';
-import {defaultAI,learningSystemPrompt,rankContext,buildMaterialContext,requestAI,studyPlanPrompt,parseAIStudyPlan,type AISettings,type AIMessage,type AIStudyPlan} from './ai';
+import {defaultAI,learningSystemPrompt,rankContext,buildMaterialContext,requestAI,STUDIUM_LEARNING_CORE,splitSourceForAI,buildBookMapPrompt,parseAIBookMap,buildAILessonPrompt,buildAILessonBatchPrompt,parseAILesson,parseAILessonBatch,formatAICourseMethod,type AIBookMap,type AISourceChunk,type AIDeepLesson,type AISettings,type AIMessage} from './ai';
 import {pdfTextItemsToText,normalizeExtractedText,htmlStudyText} from './extract';
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 type Material={id:string,title:string,subject:string,type:'note'|'book'|'link'|'file',content:string,url?:string,created:number,updated:number};
@@ -123,27 +123,55 @@ function buildStudy(name:string,subject:string,text:string,minutes=30):Generated
  const plan=createLocalStudyPlan(name,subject,text,minutes);
  return {...plan,aiUsed:false};
 }
-function sampleDocumentForAI(source:string,max=18000){
- const text=source.trim();if(text.length<=max)return text;
- const sectionSize=Math.floor(max/5),starts=[0,Math.floor(text.length*.22),Math.floor(text.length*.45),Math.floor(text.length*.68),Math.max(0,text.length-sectionSize)];
- return starts.map((start,i)=>'EXTRACTO '+(i+1)+'\n'+text.slice(start,start+sectionSize)).join('\n\n[...contenido omitido...]\n\n');
+
+function fallbackBookMap(chunks:AISourceChunk[],local:GeneratedStudy):AIBookMap{
+ return {bookTitle:local.name,overview:local.summary,objectives:['Explicar las ideas principales respaldadas por cada sección.','Relacionar conceptos solo cuando el documento establece o permite inferir el vínculo.','Aplicar ideas del texto y justificar las respuestas con evidencia.'],sequence:chunks.map((c,i)=>(i+1)+'. '+c.id+' — '+c.title),prerequisites:['No identificados automáticamente; comprueba los conocimientos previos.'],connections:[]};
 }
-function formatAIStudyMethod(plan:AIStudyPlan,minutes:number){
- const ratios=[.15,.2,.25,.2,.2],split=ratios.map(x=>Math.max(1,Math.round(minutes*x)));split[0]+=minutes-split.reduce((a,b)=>a+b,0);
- return 'PLAN AMPLIADO CON MODELO IA — revisar evidencia y exactitud.\n'+plan.lessons.map((l,i)=>{
-  const evidence=l.evidence.length?l.evidence.map(x=>'• '+x).join('\n'):'• No se validaron citas exactas; revisa este bloque en el documento.';
-  const acts=l.activities.map(x=>'• '+x).join('\n'),qs=l.questions.map((x,j)=>(j+1)+'. '+x).join('\n');
-  return 'SESIÓN '+(i+1)+' · '+l.title+' — '+minutes+' min\nOBJETIVO OBSERVABLE: '+l.objective+'\nEXPLICACIÓN ('+split[0]+' min): '+l.explanation+'\nEVIDENCIA DEL ARCHIVO:\n'+evidence+'\nRECUPERACIÓN ACTIVA ('+split[1]+' min): explica el objetivo sin consultar y luego comprueba lo que omitiste.\nACTIVIDADES GUIADAS ('+split[2]+' min):\n'+acts+'\nTRANSFERENCIA ('+split[3]+' min): aplica las ideas en un caso nuevo, usando solo lo que la fuente respalda.\nPREGUNTAS:\n'+qs+'\nCHECKPOINT ('+split[4]+' min): '+l.checkpoint+'\nCRITERIO DE PROGRESO: explica el objetivo sin consultar y respalda la respuesta con evidencia; si fallas, revisa la explicación y repite una pregunta.\n';
- }).join('\n');
+function formatAIPlanMethod(map:AIBookMap,lessons:(AIDeepLesson&{cards:{front:string,back:string,evidence:string}[],warnings:string[]})[],minutes:number){
+ return formatAICourseMethod(map,lessons,minutes);
 }
-async function enhancePlanWithAI(local:GeneratedStudy,minutes:number){
- const sample=sampleDocumentForAI(local.source),outline=local.method.slice(0,7000),userPrompt=studyPlanPrompt(sample,outline,minutes);
- const raw=await requestAI(aiSettings,aiKey,[{role:'system',content:learningSystemPrompt('diseño pedagógico de plan de estudio')},{role:'user',content:userPrompt}]);
- const parsed=parseAIStudyPlan(raw,sample);
- const supportedTerms=parsed.terms.filter(t=>sampleDocumentForAI(local.source).toLowerCase().includes(t.toLowerCase()));
- return {...local,summary:parsed.summary||local.summary,outline:parsed.outline.length?parsed.outline:parsed.lessons.map(x=>x.title),terms:supportedTerms.length?supportedTerms:local.terms,questions:parsed.questions.length?parsed.questions:local.questions,cards:parsed.cards.length?parsed.cards.map(x=>({front:x.front,back:x.back})):local.cards,method:formatAIStudyMethod(parsed,minutes),sessionCount:parsed.lessons.length,aiUsed:true,warnings:[...(local.warnings||[]),...parsed.warnings,'La IA recibió extractos seleccionados, no necesariamente el libro completo. Revisa sus explicaciones y actividades.']};
+async function enhancePlanWithAI(local:GeneratedStudy,minutes:number,depth:'standard'|'deep'|'very-deep',progress:(s:string)=>void){
+ const chunks=splitSourceForAI(local.source,depth);
+ if(!chunks.length)throw Error('No se pudo segmentar el documento en unidades para el análisis IA.');
+ progress('IA: construyendo mapa del libro…');
+ let map:AIBookMap, mapWarning:string[]=[];
+ try{
+  const rawMap=await requestAI(aiSettings,aiKey,[{role:'system',content:STUDIUM_LEARNING_CORE+'\nActúa en esta etapa como analista de estructura y secuencia curricular.'},{role:'user',content:buildBookMapPrompt(chunks,local.name,local.subject)}]);
+  map=parseAIBookMap(rawMap,chunks);
+ }catch(err){map=fallbackBookMap(chunks,local);mapWarning.push('El mapa pedagógico IA falló y se usó una ruta de respaldo: '+String(err));}
+ const batches:AISourceChunk[][]=[];for(let i=0;i<chunks.length;i+=2)batches.push(chunks.slice(i,i+2));
+ const results=new Map<string,AIDeepLesson&{cards:{front:string,back:string,evidence:string}[],warnings:string[]}>();
+ let done=0;
+ const worker=async()=>{
+  while(true){
+   const index=done++;if(index>=batches.length)return;
+   const batch=batches[index];progress('IA: lecciones '+Math.min(chunks.length,index*2+1)+'–'+Math.min(chunks.length,index*2+batch.length)+' de '+chunks.length…');
+   try{
+    const raw=await requestAI(aiSettings,aiKey,[{role:'system',content:STUDIUM_LEARNING_CORE+'\nEn esta tarea produce material docente riguroso, específico al fragmento, con respuestas y evidencia literal.'},{role:'user',content:buildAILessonBatchPrompt(batch,map,minutes)}]);
+    const parsed=parseAILessonBatch(raw,batch);parsed.forEach(x=>results.set(x.id,x));
+   }catch(batchError){
+    for(const chunk of batch){
+     try{
+      const raw=await requestAI(aiSettings,aiKey,[{role:'system',content:STUDIUM_LEARNING_CORE+'\nGenera una lección detallada y comprobable. Evita generalidades.'},{role:'user',content:buildAILessonPrompt(chunk,map,minutes)}]);
+      results.set(chunk.id,parseAILesson(raw,chunk));
+     }catch(err){mapWarning.push('No se pudo generar una lección profunda para '+chunk.id+' («'+chunk.title+'»): '+String(err||batchError));}
+    }
+   }
+  }
+ };
+ await Promise.all([worker(),worker()]);
+ const lessons=chunks.map(x=>results.get(x.id)).filter((x):x is AIDeepLesson&{cards:{front:string,back:string,evidence:string}[],warnings:string[]}=>Boolean(x));
+ if(lessons.length<2)throw Error('El modelo no pudo producir lecciones con profundidad suficiente. Prueba un modelo más capaz o revisa la conexión.');
+ const lessonWarnings=lessons.flatMap(x=>x.warnings||[]);
+ const cards=lessons.flatMap(x=>x.cards).map(x=>({front:x.front,back:x.back}));
+ const questions=lessons.flatMap(x=>x.questions.map(q=>q.question));
+ const outline=chunks.map((x,i)=>i+1+'. '+x.title);
+ const summary=map.overview||local.summary;
+ const method=formatAIPlanMethod(map,lessons,minutes);
+ const coverageWarning=lessons.length<chunks.length?'La IA no pudo desarrollar '+(chunks.length-lessons.length)+' segmento(s); se omitieron del plan profundo. Revisa la cobertura.':'Cobertura IA: '+lessons.length+'/'+chunks.length+' segmentos fuente desarrollados.';
+ return {...local,summary,outline,terms:local.terms,questions:questions.length?questions:local.questions,cards:cards.length?cards:local.cards,method,sessionCount:lessons.length,aiUsed:true,warnings:[...(local.warnings||[]),...mapWarning,...lessonWarnings,coverageWarning,'Análisis en varias etapas: mapa del libro y lecciones por fragmento secuencial. Las citas verificadas son literales; no se garantiza que la IA cubra cada detalle. Profundidad seleccionada: '+depth+'.']};
 }
-async function generateStudyFromFile(e:Event){e.preventDefault();const file=document.querySelector<HTMLInputElement>('#study-file')?.files?.[0];if(!file)return;const btn=document.querySelector<HTMLButtonElement>('#generate-study');if(btn){btn.disabled=true;btn.textContent='Analizando archivo…';}try{const minutes=Number(document.querySelector<HTMLSelectElement>('#study-minutes')?.value||30),text=await extractFileText(file);generatedStudy=buildStudy(file.name,(document.querySelector<HTMLInputElement>('#study-subject')?.value||'').trim(),text,minutes);if(document.querySelector<HTMLInputElement>('#study-ai')?.checked){if(btn)btn.textContent='Preparando plan con IA…';try{generatedStudy=await enhancePlanWithAI(generatedStudy,minutes);}catch(err){generatedStudy.warnings=[...(generatedStudy.warnings||[]),'La ampliación IA no pudo completarse: '+String(err),'Se conserva el plan heurístico local; no se presenta como IA.'];}}showStudyPreview(generatedStudy);}catch(err){alert('No se pudo analizar: '+String(err));}finally{if(btn){btn.disabled=false;btn.textContent='Crear método de estudio';}}}
+async function generateStudyFromFile(e:Event){e.preventDefault();const file=document.querySelector<HTMLInputElement>('#study-file')?.files?.[0];if(!file)return;const btn=document.querySelector<HTMLButtonElement>('#generate-study');if(btn){btn.disabled=true;btn.textContent='Analizando archivo…';}try{const minutes=Number(document.querySelector<HTMLSelectElement>('#study-minutes')?.value||30),text=await extractFileText(file);generatedStudy=buildStudy(file.name,(document.querySelector<HTMLInputElement>('#study-subject')?.value||'').trim(),text,minutes);if(document.querySelector<HTMLInputElement>('#study-ai')?.checked){try{const depth=(document.querySelector<HTMLSelectElement>('#study-depth')?.value||'deep') as 'standard'|'deep'|'very-deep';generatedStudy=await enhancePlanWithAI(generatedStudy,minutes,depth,s=>{if(btn)btn.textContent=s;});}catch(err){generatedStudy.warnings=[...(generatedStudy.warnings||[]),'La ampliación IA no pudo completarse: '+String(err),'Se conserva el plan heurístico local; no se presenta como IA.'];}}showStudyPreview(generatedStudy);}catch(err){alert('No se pudo analizar: '+String(err));}finally{if(btn){btn.disabled=false;btn.textContent='Crear método de estudio';}}}
 function studyMethodPreview(method:string){
  const chunks=method.split(/(?=^SESIÓN \d+ ·)/m),intro=chunks.shift()||'',sessions=chunks;
  return '<div class="study-plan-intro"><pre class="study-plan">'+safe(intro.trim())+'</pre></div>'+sessions.map((s,i)=>{
