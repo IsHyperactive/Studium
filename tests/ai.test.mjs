@@ -94,4 +94,8 @@ test('parsea quizzes dentro de fences markdown',()=>{
  assert.equal(result[2].difficulty,'advanced');
 });
 
-test('el porcentaje de quiz excluye respuestas sin evaluación automática',()=>{\n assert.equal(quizPercentage([2,1,null,0]),50);\n assert.equal(quizPercentage([2,2]),100);\n assert.equal(quizPercentage([null,null]),null);\n});\n
+test('el porcentaje de quiz excluye respuestas sin evaluación automática',()=>{
+ assert.equal(quizPercentage([2,1,null,0]),50);
+ assert.equal(quizPercentage([2,2]),100);
+ assert.equal(quizPercentage([null,null]),null);
+});
