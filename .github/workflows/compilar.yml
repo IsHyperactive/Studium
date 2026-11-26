@@ -52,7 +52,7 @@ jobs:
       - name: Compilar frontend
         run: npm run build
       - name: Compilar ejecutable sin instalador
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --manifest-path src-tauri/Cargo.toml --release --target ${{ matrix.target }}
       - name: Empaquetar portable
         shell: pwsh
         run: |
