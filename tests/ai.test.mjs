@@ -1,38 +1,48 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rankContext, parseStudyResponse } from '../src/ai.ts';
+import { rankContext, normalizeTerms, parseStudyResponse } from '../src/ai.ts';
 
 const docs=[
  {title:'Biología vegetal',subject:'Ciencias',content:'La fotosíntesis ocurre en los cloroplastos. La clorofila capta la luz y ayuda a transformar agua y dióxido de carbono en azúcares. Este proceso libera oxígeno.'},
- {title:'Historia',subject:'Sociales',content:'La Revolución Industrial transformó la producción, las ciudades y las relaciones laborales. Las máquinas aumentaron la capacidad de fabricación.'}
+ {title:'Historia',subject:'Sociales',content:'La Revolución Industrial transformó la producción, las ciudades y las relaciones laborales. Las máquinas aumentaron la capacidad de fabricación.'},
+ {title:'Matemáticas',subject:'Álgebra',content:'Las ecuaciones lineales permiten encontrar una incógnita. Se despeja la variable con operaciones inversas y se comprueba sustituyendo el resultado.'}
 ];
-
-test('recupera el material con mayor relación a la consulta',()=>{
- const found=rankContext('fotosíntesis clorofila',docs,2);
+test('normaliza tildes sin eliminar letras de los términos',()=>{
+ assert.deepEqual(normalizeTerms('Revolución, biología y ecuación'),['revolucion','biologia','ecuacion']);
+});
+test('ranking prioriza la fuente más relacionada y su fragmento',()=>{
+ const found=rankContext('fotosíntesis clorofila',docs,3);
  assert.equal(found[0].title,'Biología vegetal');
  assert.match(found[0].excerpt,/clorofila/i);
 });
-test('la búsqueda ignora diferencias de acentos',()=>{
- const found=rankContext('revolucion industrial',docs,2);
- assert.equal(found[0].title,'Historia');
+test('ranking funciona si la consulta no tiene tildes',()=>{
+ assert.equal(rankContext('revolucion industrial',docs)[0].title,'Historia');
 });
-test('no recupera documentos con una consulta formada solo por stopwords',()=>{
+test('ranking usa título y materia como señales',()=>{
+ assert.equal(rankContext('algebra',docs)[0].title,'Matemáticas');
+});
+test('no devuelve resultados para consulta vacía o stopwords',()=>{
  assert.deepEqual(rankContext('que para con',docs),[]);
+ assert.deepEqual(rankContext('',docs),[]);
 });
-test('respeta el límite solicitado de resultados',()=>{
+test('respeta límites y devuelve vacío si el límite es cero',()=>{
  assert.equal(rankContext('producción fotosíntesis',docs,1).length,1);
+ assert.deepEqual(rankContext('producción fotosíntesis',docs,0),[]);
 });
-
+test('no incluye documentos sin contenido',()=>{
+ assert.deepEqual(rankContext('tema',[{title:'Sin texto',subject:'',content:''}]),[]);
+});
 const validGuide={summary:'Este resumen contiene suficiente contenido para explicar el tema con claridad y una visión general.',outline:['Concepto principal','Aplicación y ejemplos'],terms:['concepto','aplicación'],cards:[{front:'¿Qué es?',back:'Una explicación con sentido.'}],questions:['Define el concepto','Explica la relación','Aplica a un ejemplo'],method:'Primero recuerda los conceptos sin consultar. Luego estudia la sección, explica con tus palabras, resuelve una práctica y corrige errores. Repite el recuerdo mañana y en varios días.'};
-test('parsea JSON del modelo incluso cuando viene en bloque markdown',()=>{
- const parsed=parseStudyResponse('Aquí está:\\n```json\\n'+JSON.stringify(validGuide)+'\\n```');
+test('parsea JSON rodeado de texto y un bloque markdown',()=>{
+ const parsed=parseStudyResponse('Respuesta:\n```json\n'+JSON.stringify(validGuide)+'\n```\nFin.');
  assert.equal(parsed.summary,validGuide.summary);
  assert.equal(parsed.cards.length,1);
 });
-test('rechaza una guía demasiado incompleta',()=>{
+test('rechaza guía incompleta o estructura JSON incorrecta',()=>{
  assert.throws(()=>parseStudyResponse(JSON.stringify({summary:'muy corto',outline:[],terms:[],cards:[],questions:[],method:''})),/incompleta/);
+ assert.throws(()=>parseStudyResponse('no es json'),/JSON válido/);
 });
-test('limita cantidad de tarjetas, preguntas y conceptos',()=>{
+test('limita conceptos, tarjetas y preguntas',()=>{
  const huge={...validGuide,terms:Array(20).fill('término'),cards:Array(20).fill({front:'pregunta',back:'respuesta'}),questions:Array(20).fill('pregunta')};
  const parsed=parseStudyResponse(JSON.stringify(huge));
  assert.equal(parsed.terms.length,10);
