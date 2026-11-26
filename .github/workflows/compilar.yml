@@ -308,6 +308,14 @@ jobs:
             echo "## Sobre la versión"
             echo "Lanzamiento oficial estable de Studium 0.1.1. Incluye únicamente paquetes portables de escritorio. No incluye instaladores, DEB, DMG, APK ni versiones duplicadas."
           } > RELEASE_NOTES.md
+      - name: Alinear tag oficial con el commit verificado
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          gh api --silent -X PATCH "repos/${GITHUB_REPOSITORY}/git/refs/tags/v0.1.1" -f sha="${SHA}" -f force=true
+          echo "Tag v0.1.1 apunta al commit que acaba de compilarse."
       - name: Publicar una única release portable
         uses: softprops/action-gh-release@v2
         with:
