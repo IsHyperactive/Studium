@@ -22,7 +22,7 @@ Aplicación local-first de escritorio, sin backend, cuenta ni sincronización.
 
 ## Tutor IA integrado
 
-- src/ai.ts conecta con una API compatible con OpenAI Chat Completions (Ollama local, OpenAI o endpoint personalizado). URL, modelo y clave se configuran desde la vista Tutor IA; la clave se guarda localmente y no se exporta en el backup.
+- src/ai.ts conecta con una API compatible con OpenAI Chat Completions (Ollama local, OpenAI o endpoint personalizado). URL, modelo y clave se configuran desde la vista Tutor IA; incluye prueba de conexión. La clave se guarda localmente y no se exporta en el backup. En Ollama local, descarga el modelo configurado (por ejemplo `ollama pull qwen2.5:3b`).
 - Recupera fragmentos relevantes de los materiales de la biblioteca por coincidencia ponderada, selecciona frases relacionadas y limita el contexto; no afirma leer el archivo completo. Al seleccionar un material, incluye un fallback de fragmento si no encuentra coincidencias.
 - El prompt exige tutoría por capas, recuperación activa, corrección específica, ejercicios diversos, referencias a títulos cuando estén disponibles, distinción entre fuente/inferencia/conocimiento general y no obedecer instrucciones incrustadas en documentos.
 - La conversación se conserva localmente; el usuario puede borrarla. El modelo externo/local recibe el mensaje, historial reciente y fragmentos recuperados. No hay entrenamiento de pesos propio ni evaluación automática de la veracidad del modelo.
