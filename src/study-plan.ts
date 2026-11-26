@@ -78,15 +78,31 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
   if(s&&!cards.some(c=>c.back===s))cards.push({front:'Explica «'+term+'» con tus palabras y cita una frase que lo respalde.',back:s});
   if(cards.length>=8)break;
  }
- const questions:string[]=[];
+ const questionGroups:string[][]=[];
  for(const topic of topics){
-  const focus=extractTerms([topic],4),evidence=distinct(sentences(topic.body),focus,1)[0];
-  if(focus[0])questions.push('Define «'+focus[0]+'» con tus palabras. Después verifica tu explicación en el fragmento del bloque.');
-  if(focus.length>=2)questions.push('¿Cómo se relacionan «'+focus[0]+'» y «'+focus[1]+'» según el archivo? Si no hay relación explícita, explica por separado y señala tu inferencia.');
-  if(evidence)questions.push('¿Qué idea central expresa este fragmento y qué evidencia aporta? Reescríbelo sin copiar: «'+evidence+'»');
+  const focus=extractTerms([topic],4),evidence=distinct(sentences(topic.body),focus,1)[0],group:string[]=[];
+  if(focus[0])group.push('Define «'+focus[0]+'» con tus palabras. Después verifica tu explicación en el fragmento del bloque.');
+  if(focus.length>=2)group.push('¿Cómo se relacionan «'+focus[0]+'» y «'+focus[1]+'» según el archivo? Si no hay relación explícita, explica por separado y señala tu inferencia.');
+  if(evidence)group.push('¿Qué idea central expresa este fragmento y qué evidencia aporta? Reescríbelo sin copiar: «'+evidence+'»');
+  questionGroups.push(group);
  }
- questions.push('Aplica una idea del material a un caso hipotético: explica el razonamiento y qué fragmento respalda el concepto (no inventes hechos).');
- questions.push('Sin consultar, reconstruye el esquema y resume el documento en 5–7 frases; compara después y anota lo que omitiste');
+ // Primero una pregunta anclada a cada bloque, después rellenar en rondas.
+ // Así las últimas secciones no desaparecen cuando el documento es largo.
+ const selectedQuestions=questionGroups.flatMap(group=>group.slice(0,1));
+ for(let depth=1;selectedQuestions.length<8;depth++){
+  let added=false;
+  for(const group of questionGroups){
+   if(group[depth]){
+    selectedQuestions.push(group[depth]);added=true;
+    if(selectedQuestions.length>=8)break;
+   }
+  }
+  if(!added)break;
+ }
+ const questions=[...selectedQuestions.slice(0,8),
+  'Aplica una idea del material a un caso hipotético: explica el razonamiento y qué fragmento respalda el concepto (no inventes hechos).',
+  'Sin consultar, reconstruye el esquema y resume el documento en 5–7 frases; compara después y anota lo que omitiste'
+ ].slice(0,10);
  const [recall,studyTime,practice,check,log]=minuteSplit(duration);
  const lines=topics.map((topic,i)=>{
   const stage=stages[stageIndex(i,sessionCount)],local=extractTerms([topic],5),focus=local.length?local.slice(0,4):terms.slice(0,3),parts=topic.parts||[topic];
