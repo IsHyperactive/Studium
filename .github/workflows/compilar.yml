@@ -53,6 +53,19 @@ jobs:
         run: npm run build
       - name: Compilar ejecutable sin instalador
         run: cargo build --manifest-path src-tauri/Cargo.toml --release --target ${{ matrix.target }}
+      - name: Verificar subsistema GUI del ejecutable
+        shell: pwsh
+        run: |
+          $exe = "src-tauri/target/${{ matrix.target }}/release/studium.exe"
+          if (!(Test-Path $exe)) { throw "Executable missing: $exe" }
+          $bytes = [IO.File]::ReadAllBytes($exe)
+          $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+          if ([BitConverter]::ToUInt32($bytes, $peOffset) -ne 0x00004550) { throw "Invalid PE signature" }
+          $optionalHeader = $peOffset + 24
+          $subsystemOffset = $optionalHeader + 68
+          $subsystem = [BitConverter]::ToUInt16($bytes, $subsystemOffset)
+          if ($subsystem -ne 2) { throw "Expected GUI subsystem (2), got subsystem $subsystem (console=3)" }
+          Write-Host "Verified Windows GUI subsystem: $subsystem"
       - name: Preparar carpeta portable
         shell: pwsh
         run: |
