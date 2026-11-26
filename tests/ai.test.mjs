@@ -56,7 +56,7 @@ test('el plan local es específico al material y respeta la duración',()=>{
  const plan=createLocalStudyPlan('Biología.txt','Biología',source,25);
  assert.match(plan.summary,/fotosíntesis|clorofila/i);
  assert.ok(plan.cards.length>=2);
- assert.match(plan.method,/25 min/);
+ assert.match(plan.method,/25 min/);\n assert.ok((plan.method.match(/Sesión \\d+/g)||[]).length>=3);\n assert.ok(plan.method.split('Sesión ').slice(1).every(s=>s.startsWith('\\d+ (25 min)')));
  assert.match(plan.method,/día 1/i);
  assert.ok(plan.questions.length>=3);
 });
@@ -76,4 +76,14 @@ test('rechaza quiz incompleto y evalúa solo puntuación permitida',()=>{
  const grade=parseQuizGrade(JSON.stringify({score:2,feedback:'Respuesta correcta y clara.',correction:'Está bien explicada.'}));
  assert.equal(grade.score,2);
  assert.throws(()=>parseQuizGrade(JSON.stringify({score:4,feedback:'x',correction:'y'})),/Puntuación inválida/);
+});
+
+test('parsea quizzes dentro de fences markdown',()=>{
+ const data={questions:[
+ {question:'Pregunta uno con contexto',answer:'Respuesta uno',explanation:'Explicación uno',difficulty:'basic'},
+ {question:'Pregunta dos con contexto',answer:'Respuesta dos',explanation:'Explicación dos',difficulty:'intermediate'},
+ {question:'Pregunta tres con contexto',answer:'Respuesta tres',explanation:'Explicación tres',difficulty:'advanced'}]};
+ const result=parseQuizResponse('\\`\\`\\`json\\n'+JSON.stringify(data)+'\\n\\`\\`\\`');
+ assert.equal(result.length,3);
+ assert.equal(result[2].difficulty,'advanced');
 });
