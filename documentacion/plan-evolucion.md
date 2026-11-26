@@ -15,12 +15,15 @@ Este plan prioriza una app de aprendizaje funcional sobre una lista de funciones
 
 ## Fase 1 — Profesor IA sólido
 - [ ] Configuración de proveedores simplificada, instrucciones claras para Ollama y proveedores remotos.
-- [x] Conversaciones separadas: crear, abrir, borrar y persistir historial.\n- [ ] Renombrar y exportar conversaciones individualmente.
+- [x] Conversaciones separadas: crear, abrir, borrar y persistir historial.
+- [ ] Renombrar y exportar conversaciones individualmente.
 - [ ] Mostrar fuentes con fragmentos consultados; abrir material original.
-- [x] Recuperación léxica mejorada: normalización de acentos, señales por título/materia, fragmentos y límite de contexto.\n- [ ] Añadir filtros de materia y fuentes consultables.
+- [x] Recuperación léxica mejorada: normalización de acentos, señales por título/materia, fragmentos y límite de contexto.
+- [ ] Añadir filtros de materia y fuentes consultables.
 - [ ] Modo tutor: pregunta primero, pista, segundo intento y explicación.
 - [x] Quiz secuencial, evaluación, feedback y adaptación de dificultad dentro de la sesión.
-- [x] Atajos de explicación, plan, recuperación activa, quiz y diagnóstico de lagunas.\n- [ ] Añadir acciones de resumen, tarjetas y aclarar errores.
+- [x] Atajos de explicación, plan, recuperación activa, quiz y diagnóstico de lagunas.
+- [ ] Añadir acciones de resumen, tarjetas y aclarar errores.
 - [x] Cancelar chat y conservar el mensaje de cancelación/error en el historial.
 - [ ] Pruebas contra respuestas vacías, JSON inválido, timeout y API no disponible.
 
