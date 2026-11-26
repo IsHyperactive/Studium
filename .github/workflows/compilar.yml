@@ -49,6 +49,8 @@ jobs:
           targets: ${{ matrix.target }}
       - name: Verificar TypeScript
         run: npm run typecheck
+      - name: Pruebas del planificador
+        run: npm run test
       - name: Compilar frontend
         run: npm run build
       - name: Compilar ejecutable sin instalador
@@ -140,6 +142,8 @@ jobs:
           targets: ${{ matrix.target }}
       - name: Verificar TypeScript
         run: npm run typecheck
+      - name: Pruebas del planificador
+        run: npm run test
       - name: Compilar frontend
         run: npm run build
       - name: Crear AppImage portable
@@ -184,6 +188,8 @@ jobs:
           targets: ${{ matrix.target }}
       - name: Verificar TypeScript
         run: npm run typecheck
+      - name: Pruebas del planificador
+        run: npm run test
       - name: Compilar frontend
         run: npm run build
       - name: Crear app portable
@@ -203,6 +209,7 @@ jobs:
 
   release:
     name: Unificar publicación portable
+    if: github.event_name != 'pull_request'
     needs: [windows, linux, macos]
     runs-on: ubuntu-24.04
     permissions:
@@ -241,9 +248,9 @@ jobs:
             echo
             echo "## Qué hace Studium"
             echo "- Importa PDF, EPUB, DOCX, TXT y Markdown y extrae texto en el dispositivo."
-            echo "- Genera resumen, esquema, conceptos clave, preguntas y un plan de estudio."
+            echo "- Genera resumen, esquema, conceptos clave, preguntas y un plan de estudio local heurístico (no IA)."
             echo "- Crea tarjetas de repaso automáticamente y guarda una guía en la Biblioteca."
-            echo "- El análisis es heurístico local, no IA. Los PDF escaneados requieren OCR, que aún no está incluido."
+            echo "- El plan local usa estructura, términos y fragmentos del archivo para sesiones progresivas, recuperación activa, práctica, checkpoints y repaso espaciado. No es IA ni entrenamiento de modelos. Los PDF escaneados requieren OCR, que aún no está incluido."
             echo
             echo "## Descargas"
             echo "| Plataforma | Arquitectura | Formato |"
@@ -269,7 +276,7 @@ jobs:
             echo "- Workflow: [Ver compilación](${RUN_URL})"
             echo
             echo "## Limitaciones conocidas"
-            echo "MVP en desarrollo: no incluye OCR para PDF escaneados, generación con IA, exámenes, audio, anotación con lápiz, sincronización ni cuentas. La extracción y generación de guías desde archivos es local y heurística."
+            echo "Limitaciones: no incluye OCR para PDF escaneados, IA integrada, exámenes, audio, anotación con lápiz, sincronización ni cuentas. El plan de estudio es heurístico local y puede omitir detalles; revisa las evidencias y preguntas antes de usarlo."
             echo
             echo "## Sobre la versión"
             echo "Lanzamiento oficial estable de Studium 0.1.1. Incluye únicamente paquetes portables de escritorio. No incluye instaladores, DEB, DMG, APK ni versiones duplicadas."
@@ -304,17 +311,16 @@ jobs:
           set -euo pipefail
           release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v0.1.1" --jq .id)"
           expected=( "RELEASE_NOTES.md" "SHA256SUMS.txt" "Studium-Windows-x64-Portable.zip" "Studium-Windows-arm64-Portable.zip" "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage" "Studium-macOS-x64-Portable.zip" "Studium-macOS-arm64-Portable.zip" )
-          gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}" --jq '.assets[] | [.id,.name] | @tsv' | while read -r line; do
-            asset_id="${line%%$'\\t'*}"
-            asset_name="${line#*$'\\t'}"
-            if ! printf '%s\\n' "${expected[@]}" | grep -Fxq "${asset_name}"; then
+          while IFS=$'\t' read -r asset_id asset_name; do
+            [ -z "${asset_id}" ] && continue
+            if ! printf '%s\n' "${expected[@]}" | grep -Fxq "${asset_name}"; then
               gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}"
               echo "Eliminado asset obsoleto: ${asset_name}"
             fi
-          done
+          done < <(gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}" --jq '.assets[] | [.id,.name] | @tsv')
           actual="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v0.1.1" --jq '.assets[].name' | sort)"
-          expected_sorted="$(printf '%s\\n' "${expected[@]}" | sort)"
-          diff -u <(printf '%s\\n' "${expected_sorted}") <(printf '%s\\n' "${actual}")
+          expected_sorted="$(printf '%s\n' "${expected[@]}" | sort)"
+          diff -u <(printf '%s\n' "${expected_sorted}") <(printf '%s\n' "${actual}")
           echo "Release contiene únicamente los 8 assets oficiales."
       - name: Eliminar releases y tags antiguos (solo tras verificación)
         env:
