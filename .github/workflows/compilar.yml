@@ -42,6 +42,9 @@ jobs:
       - name: Instalar dependencias frontend
         run: npm install
 
+      - name: Generar iconos para la plataforma
+        run: npm run icons
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -104,6 +107,9 @@ jobs:
 
       - name: Instalar dependencias frontend
         run: npm install
+
+      - name: Generar iconos Android
+        run: npm run icons
 
       - name: Compilar frontend
         run: npm run build
