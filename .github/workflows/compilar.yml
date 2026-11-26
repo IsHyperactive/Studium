@@ -26,15 +26,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           CURRENT_RUN: ${{ github.run_id }}
-          WORKFLOW_PATH: .github/workflows/compilar.yml
-          BRANCH: main
-          COMPLETED: completed
         run: |
           set -euo pipefail
-          stale_runs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?per_page=100" --jq '.workflow_runs[] | select(.id != (env.CURRENT_RUN|tonumber) and .path == env.WORKFLOW_PATH and .head_branch == env.BRANCH and .status != env.COMPLETED) | .id')"
+          stale_runs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?per_page=100" --jq '.workflow_runs[] | select(.status != "completed" and .head_branch == "main" and .path == ".github/workflows/compilar.yml") | .id')"
+          echo "Runs pendientes detectados:"
+          echo "$stale_runs"
           while IFS= read -r run_id; do
             [ -z "$run_id" ] && continue
-            gh api --silent -X POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel" || true
+            [ "$run_id" = "$CURRENT_RUN" ] && continue
+            gh api --silent -X POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel" && echo "Cancelado run $run_id" || echo "No se pudo cancelar run $run_id"
           done <<< "$stale_runs"
 
   windows:
