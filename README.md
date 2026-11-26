@@ -1,24 +1,45 @@
 # Studium
 
-Studium es una aplicación local-first para organizar materiales, aprender con tarjetas de memoria y mantener hábitos de estudio. El MVP funcional no requiere cuenta ni conexión para sus funciones principales.
+Studium es un espacio local-first para organizar el aprendizaje. Sin cuentas, sin sincronización obligatoria y con una distribución **portable**: extrae/abre el paquete y conserva el archivo de datos junto a la aplicación.
 
-## Funciones implementadas
-- **Biblioteca:** crear, editar, eliminar y buscar recursos; filtrar por materia; guardar apuntes, libros, enlaces y recursos.
-- **Notas:** editor de texto simple, títulos y materias.
-- **Repaso:** tarjetas pregunta/respuesta con calificación y programación básica de intervalos.
-- **Sesiones:** temporizador de 15, 25, 45 y 60 minutos, pausa, reinicio, registro manual y al terminar.
-- **Progreso:** minutos de hoy, objetivo diario, materiales, tarjetas pendientes y materias.
-- **Respaldo:** exportar/importar JSON y borrar datos locales.
+## Funciones disponibles
+- Biblioteca: crear, editar, eliminar y buscar materiales; filtrar por materia; guardar apuntes, libros, enlaces y recursos.
+- Notas: editor de texto sencillo.
+- Repaso: tarjetas pregunta/respuesta con intervalos básicos.
+- Sesiones: temporizador de 15, 25, 45 y 60 minutos, pausa, reinicio, registro manual y registro al terminar.
+- Progreso: minutos diarios, objetivo, materiales, tarjetas pendientes y materias.
+- Respaldo: exportar/importar JSON y borrar los datos locales.
 
-Los datos se guardan en localStorage del WebView/dispositivo. No hay sincronización, cuentas, importación real de PDF/EPUB, OCR, exámenes, IA, audio ni anotaciones con lápiz todavía.
+**Limitaciones:** no hay importación real de PDF/EPUB, OCR, exámenes, IA, audio, anotaciones con lápiz, sync ni cuentas. Es un MVP; algunas funciones necesitan pruebas en dispositivos reales.
 
-## Plataformas objetivo
-Windows x86/x64/ARM64 (instalador y ZIP); Linux x64/ARM64 (AppImage, DEB y TAR.GZ); macOS Intel/Apple Silicon (DMG/ZIP); Android ARM64/x86_64 (APK). La matriz de CI no garantiza que todos los formatos estén disponibles en la publicación actual. Paquetes pueden carecer de firma/notarización.
+## Distribución portable única
+Cada compilación reemplaza la release anterior. No se publican instaladores, DEB, DMG, APK ni archivos duplicados.
 
-## Descargas y CI
+| Plataforma | Arquitectura | Formato |
+|---|---|---|
+| Windows | x64 | ZIP portable |
+| Windows | ARM64 | ZIP portable |
+| Linux | x64 | AppImage |
+| Linux | ARM64 | AppImage |
+| macOS | Intel x64 | ZIP con .app |
+| macOS | Apple Silicon ARM64 | ZIP con .app |
+
+[**Descargar la única release portable**](https://github.com/IsHyperactive/Studium/releases)
+
+## Datos y portabilidad
+En la app de escritorio, Studium crea `Studium-data.json` en la carpeta portable junto al ejecutable (en macOS, junto al `.app`). Mantén ese archivo con la app al moverla. También puedes exportar un respaldo desde Ajustes.
+
+- Windows: necesita WebView2 Runtime.
+- Linux AppImage: puede requerir FUSE 2.
+- macOS: paquete sin firma/notarización; Gatekeeper puede mostrar una advertencia.
+- La carpeta debe permitir escritura. No ejecutes la portable desde una carpeta de solo lectura.
+
+La versión web de desarrollo usa el almacenamiento local del navegador.
+
+## CI y releases
 [Releases](https://github.com/IsHyperactive/Studium/releases) · [Actions](https://github.com/IsHyperactive/Studium/actions)
 
-Los releases de desarrollo deben incluir inventario de archivos, requisitos, instrucciones, limitaciones, commit y hashes.
+Las compilaciones verifican TypeScript y el frontend antes de empaquetar. La publicación contiene inventario, notas, commit, enlace de workflow y SHA-256.
 
 ## Desarrollo
 Requisitos: Node, npm, Rust y prerrequisitos Tauri.
@@ -29,8 +50,6 @@ npm run typecheck
 npm run build
 npm run tauri dev
 ```
-
-Build desktop: `npm run tauri build`. Para Android instala SDK/NDK/JDK e inicializa Tauri Android antes de compilar.
 
 Consulta [arquitectura](documentacion/arquitectura.md), [AGENTS](AGENTS.md) y [contribución](CONTRIBUTING.md).
 
