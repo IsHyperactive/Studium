@@ -5,7 +5,7 @@
   Una herramienta para organizar el aprendizaje y estudiar con intención.
 </p>
 
-> **Estado del proyecto:** repositorio inicial. El código de la aplicación y la documentación técnica todavía no están presentes en esta rama.
+> **Estado del proyecto:** esqueleto inicial en construcción. La primera pantalla es demostrativa; no están implementadas todavía las funciones del MVP.
 
 ## Objetivo
 
@@ -15,9 +15,9 @@ Studium está pensado como una aplicación de estudio con una experiencia adapta
 
 | Plataforma | Estado |
 |---|---|
-| Windows ARM64 | Pendiente de código y compilación CI |
-| Windows x64 | Pendiente de código y compilación CI |
-| Android ARM64 | Pendiente de código y compilación CI |
+| Windows ARM64 | Compilación CI en proceso de validación |
+| Windows x64 | Compilación CI en proceso de validación |
+| Android ARM64 | Compilación CI en proceso de validación |
 
 ## Plan de desarrollo
 
