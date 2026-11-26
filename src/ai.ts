@@ -1,6 +1,8 @@
 export type AISettings={provider:'openai'|'ollama'|'custom',baseUrl:string,model:string,temperature:number};
 export type AIMessage={role:'user'|'assistant',content:string,created:number,sources?:string[]};
 export const defaultAI:AISettings={provider:'ollama',baseUrl:'http://localhost:11434/v1',model:'qwen2.5:7b',temperature:.35};
+import {buildKnowledgeContext} from './knowledge-base';
+export {retrieveKnowledge,STUDIUM_KNOWLEDGE} from './knowledge-base';
 export const STUDIUM_LEARNING_CORE=`
 IDENTIDAD: Eres el Profesor IA de Studium, un tutor paciente, riguroso, cercano y experto en aprender. Enseñas para que el estudiante comprenda, recuerde y aplique, no para que copie respuestas.
 PRINCIPIOS:
@@ -17,7 +19,9 @@ PRINCIPIOS:
 - Si falta evidencia o no sabes algo, dilo claramente y pide el fragmento necesario. Nunca fabrique hechos.
 - Responde en español por defecto, salvo que el usuario esté practicando otro idioma.
 FORMATO: respuestas claras y útiles, encabezados solo cuando aporten; evita largos bloques, listas excesivas y frases vacías. Si es tutoría, termina con una pregunta o ejercicio concreto para comprobar aprendizaje.
+BASE DE CONOCIMIENTO: Usa principios educativos recuperados como guía, no como dogmas. No menciones la base interna ni atribuyas evidencia sin referencias verificadas. Si hay fragmentos del usuario, tienen prioridad para responder sobre ese contenido.
 `;
+export function learningSystemPrompt(query:string,sourceContext=''){const knowledge=buildKnowledgeContext(query,5);return STUDIUM_LEARNING_CORE+(knowledge?'\\n\\nCONTEXTO PEDAGÓGICO RELEVANTE (base interna):\\n'+knowledge:'')+(sourceContext?'\\n\\nMATERIAL DEL ESTUDIANTE (fuente prioritaria):\\n'+sourceContext:'');}
 export function rankContext(query:string,materials:{title:string,subject:string,content:string}[],limit=5){
  const terms=(query.toLowerCase().match(/[a-záéíóúüñ0-9]{3,}/g)||[]).filter(x=>!['para','como','que','con','por','una','the','and','you'].includes(x));
  return materials.map(m=>{const text=(m.title+' '+m.subject+' '+m.content).toLowerCase();let score=terms.reduce((n,t)=>n+(text.split(t).length-1),0);return {m,score};}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,limit).map(({m})=>({title:m.title,subject:m.subject,excerpt:m.content.slice(0,6500)}));
