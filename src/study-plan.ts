@@ -91,7 +91,7 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
  }
  // Primero una pregunta anclada a cada bloque, después rellenar en rondas.
  // Así las últimas secciones no desaparecen cuando el documento es largo.
- const selectedQuestions=questionGroups.flatMap(group=>group.slice(0,2));
+ const selectedQuestions=questionGroups.flatMap(group=>group.slice(0,3));
  for(let depth=2;selectedQuestions.length<60;depth++){
   let added=false;
   for(const group of questionGroups){
