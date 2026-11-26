@@ -352,7 +352,7 @@ jobs:
           for name in "Studium-Windows-x64.exe" "Studium-Windows-arm64.exe"; do
             test -s "${name}"
             file "${name}" | grep -q PE32
-            python3 -c 'import struct,sys; d=open(sys.argv[1],"rb").read(); p=struct.unpack_from("<I",d,0x3c)[0]; assert d[p:p+4]==b"PE\\0\\0"; machine=struct.unpack_from("<H",d,p+4)[0]; expected={"Studium-Windows-x64.exe":0x8664,"Studium-Windows-arm64.exe":0xAA64}[sys.argv[1]]; assert machine==expected, "wrong PE architecture"; assert struct.unpack_from("<H",d,p+24+68)[0]==2, "GUI subsystem not set"' "${name}"
+            python3 -c 'import struct,sys; d=open(sys.argv[1],"rb").read(); p=struct.unpack_from("<I",d,0x3c)[0]; assert d[p:p+4]==bytes.fromhex("50450000"); machine=struct.unpack_from("<H",d,p+4)[0]; expected={"Studium-Windows-x64.exe":0x8664,"Studium-Windows-arm64.exe":0xAA64}[sys.argv[1]]; assert machine==expected, "wrong PE architecture"; assert struct.unpack_from("<H",d,p+24+68)[0]==2, "GUI subsystem not set"' "${name}"
           done
           for name in "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage"; do
             test -s "${name}"
