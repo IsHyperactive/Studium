@@ -133,7 +133,7 @@ function formatAIStudyMethod(plan:AIStudyPlan,minutes:number){
  return 'PLAN AMPLIADO CON MODELO IA — revisar evidencia y exactitud.\\n'+plan.lessons.map((l,i)=>{
   const evidence=l.evidence.length?l.evidence.map(x=>'• '+x).join('\\n'):'• No se validaron citas exactas; revisa este bloque en el documento.';
   const acts=l.activities.map(x=>'• '+x).join('\\n'),qs=l.questions.map((x,j)=>(j+1)+'. '+x).join('\\n');
-  return 'SESIÓN '+(i+1)+' · '+l.title+' — '+minutes+' min\\nOBJETIVO OBSERVABLE: '+l.objective+'\\nEXPLICACIÓN: '+l.explanation+'\\nEVIDENCIA DEL ARCHIVO:\\n'+evidence+'\\nACTIVIDADES:\\n'+acts+'\\nPREGUNTAS:\\n'+qs+'\\nCHECKPOINT: '+l.checkpoint+'\\nCRITERIO DE PROGRESO: explica el objetivo sin consultar y respalda la respuesta con evidencia; si fallas, revisa la explicación y repite una pregunta.\\n';
+  return 'SESIÓN '+(i+1)+' · '+l.title+' — '+minutes+' min\\nOBJETIVO OBSERVABLE: '+l.objective+'\\nEXPLICACIÓN ('+split[0]+' min): '+l.explanation+'\\nEVIDENCIA DEL ARCHIVO:\\n'+evidence+'\\nRECUPERACIÓN ACTIVA ('+split[1]+' min): explica el objetivo sin consultar y luego comprueba lo que omitiste.\\nACTIVIDADES GUIADAS ('+split[2]+' min):\\n'+acts+'\\nTRANSFERENCIA ('+split[3]+' min): aplica las ideas en un caso nuevo, usando solo lo que la fuente respalda.\\nPREGUNTAS:\\n'+qs+'\\nCHECKPOINT ('+split[4]+' min): '+l.checkpoint+'\\nCRITERIO DE PROGRESO: explica el objetivo sin consultar y respalda la respuesta con evidencia; si fallas, revisa la explicación y repite una pregunta.\\n';
  }).join('\\n');
 }
 async function enhancePlanWithAI(local:GeneratedStudy,minutes:number){
