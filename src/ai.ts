@@ -18,12 +18,32 @@ PRINCIPIOS:
 - Responde en español por defecto, salvo que el usuario esté practicando otro idioma.
 FORMATO: respuestas claras y útiles, encabezados solo cuando aporten; evita largos bloques, listas excesivas y frases vacías. Si es tutoría, termina con una pregunta o ejercicio concreto para comprobar aprendizaje.
 `;
-const retrievalStop=new Set<string>('para como que con por una uno unos unas los las del desde entre sobre esta este estos esas cuando donde porque pero tambien mas muy sin sus son fue ser tiene hacer pueden cada todo todos quien cual que como and the for with this that from into your about are was has have not can'.split(' '));
-function normalizeTerms(text:string):string[]{const found=text.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').match(/[a-z0-9]{3,}/g);return found??[];}
+const retrievalStop=new Set<string>(('para como que con por una uno unos unas los las del desde entre sobre esta este estos esas cuando donde porque pero tambien mas muy sin sus son fue ser tiene hacer pueden cada todo todos quien cual que como and the for with this that from into your about are was has have not can').split(' '));
+export function normalizeTerms(text:string):string[]{return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').match(/[a-z0-9]{3,}/g)??[];}
+export type RankedSource={title:string,subject:string,excerpt:string,score:number};
 export function rankContext(query:string,materials:{title:string,subject:string,content:string}[],limit=5){
- const terms:string[]=Array.from(new Set<string>(normalizeTerms(query).filter((t:string)=>!retrievalStop.has(t))));if(!terms.length)return [];
- const scored=materials.map(m=>{const title:string[]=normalizeTerms(m.title),subject:string[]=normalizeTerms(m.subject);let bestScore=0,bestAt=0;const size=1400,step=1000;for(let at=0;at<m.content.length;at+=step){const chunk=m.content.slice(at,at+size),tokens=normalizeTerms(chunk);let score=0;for(const term of terms){const count=tokens.filter(x=>x===term).length;if(count)score+=Math.min(count,5);if(title.includes(term))score+=5;if(subject.includes(term))score+=3;}if(score>bestScore){bestScore=score;bestAt=at;}}let total=0;const all=normalizeTerms(m.content);for(const t of terms)total+=all.filter(x=>x===t).length;return {m,score:bestScore+Math.min(total,12)*.15,bestAt};}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,limit);
- return scored.map(({m,bestAt})=>({title:m.title,subject:m.subject,excerpt:m.content.slice(Math.max(0,bestAt-80),Math.min(m.content.length,bestAt+1400))}));
+ const terms=[...new Set(normalizeTerms(query).filter(t=>!retrievalStop.has(t)))];
+ if(!terms.length||limit<=0)return [];
+ const docs=materials.filter(m=>m.content.trim());
+ const df=new Map<string,number>();
+ for(const m of docs){const unique=new Set(normalizeTerms(m.title+' '+m.subject+' '+m.content));for(const t of terms)if(unique.has(t))df.set(t,(df.get(t)||0)+1);}
+ const scored: {m:typeof docs[number],score:number,at:number}[]=[];
+ for(const m of docs){
+  const title=normalizeTerms(m.title),subject=normalizeTerms(m.subject),chunks:{text:string,at:number}[]=[];
+  const size=1300,step=950;
+  for(let at=0;at<m.content.length;at+=step)chunks.push({text:m.content.slice(at,at+size),at});
+  let best=0,bestAt=0;
+  for(const chunk of chunks){
+   const tokens=normalizeTerms(chunk.text),freq=new Map<string,number>();
+   for(const t of tokens)freq.set(t,(freq.get(t)||0)+1);
+   let score=0;
+   for(const term of terms){const n=freq.get(term)||0;if(n)score+=Math.min(n,4)*(1+Math.log(1+(docs.length/(1+(df.get(term)||0)))));if(title.includes(term))score+=5;if(subject.includes(term))score+=2.5;}
+   const phrase=query.trim().toLowerCase();if(phrase.length>=5&&chunk.text.toLowerCase().includes(phrase))score+=4;
+   if(score>best){best=score;bestAt=chunk.at;}
+  }
+  if(best>0)scored.push({m,score:best,at:bestAt});
+ }
+ return scored.sort((a,b)=>b.score-a.score).slice(0,Math.floor(limit)).map(({m,score,at})=>({title:m.title,subject:m.subject,excerpt:m.content.slice(Math.max(0,at-80),Math.min(m.content.length,at+1300)),score}));
 }
 export async function requestAI(settings:AISettings,key:string,messages:{role:'system'|'user'|'assistant',content:string}[],signal?:AbortSignal){
  const base=settings.baseUrl.trim().replace(/\/$/,'');if(!base)throw new Error('Configura la URL del servicio IA.');
