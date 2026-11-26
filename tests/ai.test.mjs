@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rankContext, normalizeTerms, parseStudyResponse } from '../src/ai.ts';
+import { rankContext, normalizeTerms, parseStudyResponse, parseQuizResponse, parseQuizGrade } from '../src/ai.ts';
 import { createLocalStudyPlan } from '../src/study-plan.ts';
 
 const docs=[
@@ -62,4 +62,18 @@ test('el plan local es específico al material y respeta la duración',()=>{
 });
 test('planificador local rechaza textos insuficientes',()=>{
  assert.throws(()=>createLocalStudyPlan('vacío','', 'solo palabras'),/poco texto/);
+});
+
+test('valida estructura de quiz y normaliza dificultad',()=>{
+ const raw=JSON.stringify({questions:[
+ {question:'Define un concepto clave',answer:'Definición válida',explanation:'Explicación con fundamento',difficulty:'basic'},
+ {question:'Relaciona dos ideas principales',answer:'Relación',explanation:'Se conectan por el mecanismo descrito',difficulty:'intermediate'},
+ {question:'Aplica el conocimiento a un caso',answer:'Aplicación',explanation:'Se aplica de esta manera',difficulty:'unknown'}]});
+ const q=parseQuizResponse(raw);assert.equal(q.length,3);assert.equal(q[2].difficulty,'intermediate');
+});
+test('rechaza quiz incompleto y evalúa solo puntuación permitida',()=>{
+ assert.throws(()=>parseQuizResponse(JSON.stringify({questions:[]})),/al menos 3/);
+ const grade=parseQuizGrade(JSON.stringify({score:2,feedback:'Respuesta correcta y clara.',correction:'Está bien explicada.'}));
+ assert.equal(grade.score,2);
+ assert.throws(()=>parseQuizGrade(JSON.stringify({score:4,feedback:'x',correction:'y'})),/Puntuación inválida/);
 });
