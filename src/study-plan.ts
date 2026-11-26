@@ -7,7 +7,7 @@ function sentenceSplit(text:string){return (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g
 export function createLocalStudyPlan(name:string,subject:string,source:string,minutes=30):LocalStudyPlan{
  const clean=source.replace(/\s+/g,' ').trim();if(clean.length<300)throw new Error('El archivo contiene poco texto extraíble. Los PDF escaneados requieren OCR, que no está disponible.');
  const terms=keywords(clean,12),sentences=sentenceSplit(clean),freq=new Map<string,number>();for(const w of words(clean))if(!STOP.has(w))freq.set(w,(freq.get(w)||0)+1);
- const scored=sentences.map((s,i)=>({s,i,score:words(s).reduce((n,w)=>n+(freq.get(w)||0),0)/Math.max(1,words(s).length)})).sort((a,b)=>b.score-a.score).slice(0,7).sort((a,b)=>a.i-b.i);
+ const totalWords=Math.max(1,words(clean).length),termSet=new Set(terms),scored=sentences.map((s,i)=>{const unique=new Set(words(s));let score=0;for(const w of unique){if(STOP.has(w))continue;const count=freq.get(w)||0;if(count)score+=1+Math.log((totalWords+1)/(count+1));if(termSet.has(w))score+=1.5;}return {s,i,score:score/Math.sqrt(Math.max(1,unique.size))};}).sort((a,b)=>b.score-a.score).slice(0,6).sort((a,b)=>a.i-b.i);
  const summary=scored.map(x=>x.s).join(' ').slice(0,2500)||clean.slice(0,1200);
  const headings=source.split(/\n/).map(s=>s.trim().replace(/^#+\s*/,'')).filter(s=>s.length>3&&s.length<110&&(/^(cap[ií]tulo|unidad|tema|[0-9]+[.)])/i.test(s)||/^.{2,70}:$/.test(s))).slice(0,12);
  const outline=(headings.length?headings:terms.slice(0,8)).map((t,i)=>`${i+1}. ${t}`);
