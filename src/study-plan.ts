@@ -15,7 +15,7 @@ function termsFrom(text:string,limit=6){const raw=text.match(TOKEN)||[],clean=ra
  return [...m.entries()].map(([k,v])=>({k,...v,score:v.n*(k.includes(' ')?1.35:1)})).filter(x=>!STOP.has(x.k)&&x.k.split(' ').every(t=>t.length>=3&&!VERBS.has(t))&&(!x.k.includes(' ')||x.n>=2)).sort((a,b)=>b.score-a.score||b.k.length-a.k.length).slice(0,limit).map(x=>x.display).filter((x,i,a)=>a.findIndex(y=>norm(y)===norm(x))===i);}
 function makeTitle(body:string,i:number){const t=extractTerms([{title:'',body}],3);return t.length?'Bloque '+(i+1)+' · '+t.slice(0,2).join(' / '):'Bloque '+(i+1);}
 function chunk(title:string,body:string,target=430):Section[]{const ss=sentences(body);if(ss.length<4)return[{title,body:ss.join(' ').trim()||body.trim()}];const out:string[]=[];let cur:string[]=[],n=0;for(const s of ss){const w=wc(s);if(cur.length>=2&&n+w>target){out.push(cur.join(' '));cur=[];n=0;}cur.push(s);n+=w;}if(cur.length)out.push(cur.join(' '));return out.map((b,i)=>({title:out.length===1?title:title+' · parte '+(i+1),body:b}));}
-function parseSections(raw:string):Section[]{const parsed:Section[]=[];let title='',buf:string[]=[];const flush=()=>{const body=buf.join(' ').replace(/\s+/g,' ').trim();if(body.length>=65)parsed.push({title:title||'Sección '+(parsed.length+1),body});buf=[];};for(const line of raw.split(/\r?\n/)){const l=line.trim();if(!l)continue;if(isHeading(l)){flush();title=headingText(l);}else buf.push(l.replace(/^[-*•]\s*/,''));}flush();if(parsed.length>=2)return parsed.flatMap(s=>chunk(s.title,s.body,650));if(parsed.length===1){const c=chunk(parsed[0].title,parsed[0].body,380);if(c.length>=2)return c;return parsed;}const paragraphs=raw.split(/\n\s*\n|\r\n\s*\r\n/).map(p=>p.replace(/\s+/g,' ').trim()).filter(p=>p.length>=70),source=paragraphs.length?paragraphs:sentences(raw),out:string[]=[];let cur='',n=0;for(const p of source){const w=wc(p);if(cur&&n+w>430){out.push(cur.trim());cur='';n=0;}cur+=' '+p;n+=w;}if(cur.trim())out.push(cur.trim());return out.length?out.map((b,i)=>({title:makeTitle(b,i),body:b})): [{title:'Material completo',body:raw.replace(/\s+/g,' ').trim()}];}
+function parseSections(raw:string):Section[]{const parsed:Section[]=[];let title='',buf:string[]=[];const flush=()=>{const body=buf.join(' ').replace(/\s+/g,' ').trim();if(body.length>=65)parsed.push({title:title||'Sección '+(parsed.length+1),body});buf=[];};for(const line of raw.split(/\r?\n/)){const l=line.trim();if(!l)continue;if(isHeading(l)){flush();title=headingText(l);}else buf.push(l.replace(/^[-*•]\s*/,''));}flush();if(parsed.length>=2)return parsed.flatMap(s=>chunk(s.title,s.body,340));if(parsed.length===1){const c=chunk(parsed[0].title,parsed[0].body,340);if(c.length>=2)return c;return parsed;}const paragraphs=raw.split(/\n\s*\n|\r\n\s*\r\n/).map(p=>p.replace(/\s+/g,' ').trim()).filter(p=>p.length>=70),source=paragraphs.length?paragraphs:sentences(raw),out:string[]=[];let cur='',n=0;for(const p of source){const w=wc(p);if(cur&&n+w>340){out.push(cur.trim());cur='';n=0;}cur+=' '+p;n+=w;}if(cur.trim())out.push(cur.trim());return out.length?out.map((b,i)=>({title:makeTitle(b,i),body:b})): [{title:'Material completo',body:raw.replace(/\s+/g,' ').trim()}];}
 function extractTerms(sections:Section[],limit=12){
  const m=new Map<string,{display:string,n:number,df:number,heading:number}>();
  sections.forEach(s=>{
@@ -61,22 +61,22 @@ const stages=[
  {name:'Aplicar y contrastar',activity:'Resuelve un caso hipotético nuevo con los conceptos del bloque. Compara dos ideas solo cuando el texto permita hacerlo; justifica cada conclusión con evidencia.'},
  {name:'Recuperar y evaluar',activity:'Haz una prueba sin consultar: definición, idea central, relación, aplicación y evidencia. Corrige cada respuesta y vuelve a explicar los errores sin mirar.'}
 ];
-function stageIndex(i:number,n:number){const seq:Record<number,number[]>={2:[0,3],3:[0,2,4],4:[0,1,3,4],5:[0,1,2,3,4]};return(seq[n]||seq[5])[i]??4;}
+function stageIndex(i:number,n:number){const seq:Record<number,number[]>={2:[0,3],3:[0,2,4],4:[0,1,3,4],5:[0,1,2,3,4]};return n<=5?(seq[n]||seq[5])[i]??4:[0,1,2,3,4][i%5];}
 export function createLocalStudyPlan(name:string,subject:string,source:string,minutes=30):LocalStudyPlan{
  const raw=source.trim();
  if(raw.length<300)throw new Error('El archivo contiene poco texto extraíble. Los PDF escaneados requieren OCR, que no está disponible.');
  const sections=parseSections(raw),all=sections.flatMap(s=>sentences(s.body));
  if(all.length<3)throw new Error('No se pudo separar el contenido en ideas legibles. Comprueba que el documento tenga texto y no sea una imagen escaneada.');
- const terms=extractTerms(sections,12),rawWords=wc(raw),duration=Math.max(20,Math.min(60,Math.round(minutes||30)));
- const desired=Math.min(5,Math.max(2,Math.ceil(rawWords/600),Math.min(sections.length,5))),topics=adjust(sections,desired),sessionCount=topics.length;
+ const terms=extractTerms(sections,24),rawWords=wc(raw),duration=Math.max(20,Math.min(60,Math.round(minutes||30)));
+ const desired=Math.min(24,Math.max(2,Math.ceil(rawWords/350),Math.min(sections.length,24))),topics=adjust(sections,desired),sessionCount=topics.length;
  const sumParts=sections.map(s=>{const sentence=distinct(sentences(s.body),extractTerms([s],5),1)[0];return sentence?s.title+': '+sentence:''}).filter(Boolean);
  const summary=[...sumParts,...distinct(all,terms,4)].filter((s,i,a)=>a.findIndex(x=>norm(x)===norm(s))===i).slice(0,8).join(' ').slice(0,2200);
- const outline=topics.map(s=>s.title).filter((x,i,a)=>a.findIndex(y=>norm(y)===norm(x))===i).slice(0,10);
+ const outline=topics.map(s=>s.title).filter((x,i,a)=>a.findIndex(y=>norm(y)===norm(x))===i).slice(0,24);
  const cards:{front:string,back:string}[]=[];
  for(const term of terms){
   const k=norm(term).split(' '),s=all.find(x=>k.every(t=>words(x).includes(t)))||all.find(x=>k.some(t=>words(x).includes(t)));
   if(s&&!cards.some(c=>c.back===s))cards.push({front:'Explica «'+term+'» con tus palabras y cita una frase que lo respalde.',back:s});
-  if(cards.length>=8)break;
+  if(cards.length>=24)break;
  }
  const questionGroups:string[][]=[];
  for(const topic of topics){
@@ -88,13 +88,13 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
  }
  // Primero una pregunta anclada a cada bloque, después rellenar en rondas.
  // Así las últimas secciones no desaparecen cuando el documento es largo.
- const selectedQuestions=questionGroups.flatMap(group=>group.slice(0,1));
- for(let depth=1;selectedQuestions.length<8;depth++){
+ const selectedQuestions=questionGroups.flatMap(group=>group.slice(0,2));
+ for(let depth=2;selectedQuestions.length<60;depth++){
   let added=false;
   for(const group of questionGroups){
    if(group[depth]){
     selectedQuestions.push(group[depth]);added=true;
-    if(selectedQuestions.length>=8)break;
+    if(selectedQuestions.length>=60)break;
    }
   }
   if(!added)break;
@@ -102,7 +102,7 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
  const questions=[...selectedQuestions.slice(0,8),
   'Aplica una idea del material a un caso hipotético: explica el razonamiento y qué fragmento respalda el concepto (no inventes hechos).',
   'Sin consultar, reconstruye el esquema y resume el documento en 5–7 frases; compara después y anota lo que omitiste'
- ].slice(0,10);
+ ].slice(0,60);
  const [recall,studyTime,practice,check,log]=minuteSplit(duration);
  const lines=topics.map((topic,i)=>{
   const stage=stages[stageIndex(i,sessionCount)],local=extractTerms([topic],5),focus=local.length?local.slice(0,4):terms.slice(0,3),parts=topic.parts||[topic];
