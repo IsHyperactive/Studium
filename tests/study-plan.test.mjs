@@ -31,3 +31,18 @@ test('conceptos evitan términos genéricos de estructura documental',()=>{
  const p=createLocalStudyPlan('Biología.md','',source);
  for(const t of p.terms)assert.ok(!['documento','información','texto','sección','bloque','contenido','tema'].includes(t.toLowerCase()));
 });
+
+test('la comprobación cubre todos los bloques incluso en documentos largos',()=>{
+ const five=[
+  '# Mitocondrias y energía','La mitocondria participa en la respiración celular y produce energía química. Las mitocondrias tienen membranas que permiten distintas etapas de la respiración. La respiración celular depende de procesos que ocurren en la mitocondria y libera energía para las funciones de la célula.',
+  '# Ribosomas y proteínas','Los ribosomas participan en la síntesis de proteínas y traducen la información genética. La síntesis de proteínas ocurre en los ribosomas y permite construir proteínas necesarias para la célula. Los ribosomas pueden encontrarse libres o asociados a membranas.',
+  '# Enzimas y reacciones','Las enzimas aceleran reacciones químicas sin consumirse en ellas. Cada enzima tiene condiciones que influyen en su actividad y la actividad enzimática cambia cuando varían temperatura o pH. Las enzimas ayudan a regular reacciones del metabolismo.',
+  '# Ecosistemas y energía','Los ecosistemas incluyen organismos y factores físicos que interactúan. La energía fluye entre niveles tróficos y parte se disipa en cada transferencia. Los ecosistemas dependen de intercambios de materia y energía.',
+  '# Neuronas y señales','Las neuronas transmiten señales mediante cambios eléctricos y comunicación química. La transmisión neuronal conecta células y permite coordinar respuestas. Las neuronas se comunican en sinapsis y ajustan su actividad según estímulos.'
+ ].join('\n\n');
+ const p=createLocalStudyPlan('Unidad larga.md','Ciencias',five,45);
+ assert.equal(p.sessionCount,5);
+ const focuses=p.method.split('FOCO: ').slice(1).map(x=>x.split('\n')[0].match(/«([^»]+)»/)?.[1]).filter(Boolean);
+ assert.equal(focuses.length,5);
+ for(const term of focuses)assert.ok(p.questions.some(q=>q.toLowerCase().includes(term.toLowerCase())),'La comprobación no cubre el concepto '+term);
+});
