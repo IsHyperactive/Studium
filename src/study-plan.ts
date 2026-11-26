@@ -124,10 +124,16 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
    'Localiza una frase exacta que respalde tu explicación y di por qué es relevante (0–2).'
   ];
   const evidenceText=evidence.length?evidence.map(x=>'• '+x).join('\n'):'• No se detectó una frase fiable; vuelve al bloque y selecciona una evidencia manual.';
+  const lessonQuestions=[
+   '• Define «'+(first||topic.title)+'» sin consultar y luego verifica la definición en el archivo.',
+   second?'• Explica la relación entre «'+first+'» y «'+second+'»; distingue lo que afirma el texto de tu inferencia.':'• Reconstruye el mecanismo o idea principal de este bloque en tres pasos, si el documento los describe.',
+   evidence[0]?'• Parafrasea este fragmento y explica qué evidencia aporta: «'+evidence[0]+'»':'• Elige una frase del material, parafrasea y explica por qué respalda tu respuesta.'
+  ].join('\n');
   return 'SESIÓN '+(i+1)+' · '+stage.name+' — '+topic.title+' ('+duration+' min)\n'+
    'OBJETIVO OBSERVABLE: '+objectives+'\n'+
    'FOCO: '+focusText+'\n'+
    'EVIDENCIA DEL ARCHIVO (fragmentos):\n'+evidenceText+'\n\n'+
+   'PREGUNTAS DE LA LECCIÓN:\n'+lessonQuestions+'\n\n'+
    recall+' min · RECUPERACIÓN: antes de leer, escribe lo que recuerdas de '+(focus.slice(0,2).join(' y ')||topic.title)+' y una pregunta que no puedas responder.\n'+
    studyTime+' min · LECTURA SELECTIVA: lee este bloque; marca definición, idea principal, relación/proceso y la frase que respalda cada una. No subrayes todo.\n'+
    practice+' min · PRODUCCIÓN ACTIVA: '+stage.activity+'\n'+
