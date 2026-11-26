@@ -53,7 +53,7 @@ function selectedPassages(query:string,content:string,maxChars:number){
 }
 export function rankContext(query:string,materials:{title:string,subject:string,content:string}[],limit=5){
  const size=Math.max(1,materials.length);
- return materials.map(m=>({m,score:scoreText(query,m.title+' '+m.subject,size)*2.2+scoreText(query,m.content,size)})).sort((a,b)=>b.score-a.score).slice(0,limit).map(({m})=>({title:m.title,subject:m.subject,excerpt:selectedPassages(query,m.content,6500)}));
+ return materials.map(m=>({m,score:scoreText(query,m.title+' '+m.subject,size)*2.2+scoreText(query,m.content,size)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,limit).map(({m})=>({title:m.title,subject:m.subject,excerpt:selectedPassages(query,m.content,6500)}));
 }
 export function buildMaterialContext(query:string,materials:{title:string,subject:string,content:string}[],limit=4,maxChars=15000){
  const ranked=rankContext(query,materials,limit);if(!ranked.length)return '';
