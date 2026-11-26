@@ -237,6 +237,7 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - name: Descargar artefactos de todas las plataformas
         uses: actions/download-artifact@v4
         with:
@@ -263,6 +264,16 @@ jobs:
             echo "# Studium ${VERSION} — compilación #${RUN_NUMBER}"
             echo
             echo "> **Estado:** compilación automática de desarrollo. No es una versión estable ni está firmada."
+            echo
+            echo "## Archivos incluidos"
+            echo "| Archivo | Tamaño |"
+            echo "|---|---:|"
+            for file in *; do
+              if [ -f "$file" ] && [ "$file" != "RELEASE_NOTES.md" ]; then
+                size="$(du -h "$file" | cut -f1)"
+                printf '| `%s` | %s |\\n' "$file" "$size"
+              fi
+            done
             echo
             echo "## Qué incluye"
             echo "- Windows: x86 (32 bits), x64 y ARM64 — instalador NSIS y ZIP portable."
