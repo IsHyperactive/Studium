@@ -1,4 +1,4 @@
-import {retrieveKnowledge} from './knowledge-base';
+import {retrieveKnowledge} from './knowledge-base.ts';
 export type LocalStudyPlan={name:string,subject:string,source:string,summary:string,outline:string[],terms:string[],cards:{front:string,back:string}[],questions:string[],method:string,sessionCount:number,minutesPerSession:number};
 const STOP=new Set(('este esta estos estas aquel aquella para como pero porque cuando donde sobre entre desde hasta tambien puede pueden cada otra otro todos todas dicho sera hace hacer tener mas menos muy todo nada algo que quien cual los las del una uno unos unas por con sin son fue ser tiene y o a el en se al lo su sus mi tu es esta estos las por que what with from this that those which their there then also more most have has had').split(' '));
 const TOKEN=/[a-záéíóúüñ]{3,}/gi;
