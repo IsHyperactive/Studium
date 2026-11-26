@@ -29,6 +29,16 @@ jobs:
         with:
           node-version: 22
 
+      - name: Instalar herramientas ARM64 MSVC
+        if: matrix.arch == 'arm64'
+        shell: pwsh
+        run: |
+          $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -property installationPath
+          & $installer modify --installPath "$vs" --add Microsoft.VisualStudio.Component.VC.Tools.ARM64 --quiet --wait --norestart
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Instalar dependencias frontend
         run: npm install
 
@@ -69,7 +79,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - uses: actions/setup-java@v4
         with:
