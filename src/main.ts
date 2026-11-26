@@ -165,7 +165,7 @@ async function enhancePlanWithAI(local:GeneratedStudy,minutes:number,depth:'stan
  const lessonWarnings=lessons.flatMap(x=>x.warnings||[]);
  const cards=lessons.flatMap(x=>x.cards).map(x=>({front:x.front,back:x.back}));
  const questions=lessons.flatMap(x=>x.questions.map(q=>q.question));
- const fallbackPlans=chunks.filter(x=>!results.has(x.id)).map(chunk=>{try{return {chunk,plan:createLocalStudyPlan(local.name,local.subject,chunk.content,minutes)};}catch(err){mapWarning.push('No se pudo generar respaldo local para '+chunk.id+': '+String(err));return null;}}).filter((x):x is {chunk:AISourceChunk,plan:GeneratedStudy}=>Boolean(x));
+ const fallbackPlans=(chunks.filter(x=>!results.has(x.id)).map(chunk=>{try{return {chunk,plan:createLocalStudyPlan(local.name,local.subject,chunk.content,minutes)};}catch(err){mapWarning.push('No se pudo generar respaldo local para '+chunk.id+': '+String(err));return null;}}).filter(Boolean)) as {chunk:AISourceChunk,plan:ReturnType<typeof createLocalStudyPlan>}[];
  const outline=chunks.map((x,i)=>(i+1)+'. '+(results.has(x.id)?'[IA] ':'[Local] ')+x.title);
  const summary=map.overview||local.summary;
  const method=formatAIPlanMethod(map,lessons,minutes)+(fallbackPlans.length?'\n\nLECCIONES DE RESPALDO LOCAL (heurísticas, no IA):\n'+fallbackPlans.map(x=>x.plan.method).join('\n\n'):'');
