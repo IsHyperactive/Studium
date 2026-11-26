@@ -126,7 +126,7 @@ function buildStudy(name:string,subject:string,text:string,minutes=30):Generated
 function sampleDocumentForAI(source:string,max=18000){
  const text=source.trim();if(text.length<=max)return text;
  const sectionSize=Math.floor(max/5),starts=[0,Math.floor(text.length*.22),Math.floor(text.length*.45),Math.floor(text.length*.68),Math.max(0,text.length-sectionSize)];
- return starts.map((start,i)=>'EXTRACTO '+(i+1)+'\\n'+text.slice(start,start+sectionSize)).join('\\n\\n[...contenido omitido...]\\n\\n');
+ return starts.map((start,i)=>'EXTRACTO '+(i+1)+'\n'+text.slice(start,start+sectionSize)).join('\n\n[...contenido omitido...]\n\n');
 }
 function formatAIStudyMethod(plan:AIStudyPlan,minutes:number){
  const ratios=[.15,.2,.25,.2,.2],split=ratios.map(x=>Math.max(1,Math.round(minutes*x)));split[0]+=minutes-split.reduce((a,b)=>a+b,0);
