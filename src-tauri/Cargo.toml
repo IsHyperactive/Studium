@@ -1,6 +1,6 @@
 [package]
 name = "studium"
-version = "0.1.0"
+version = "0.1.1"
 description = "Studium — espacio de aprendizaje"
 authors = ["IsHyperactive"]
 edition = "2021"
