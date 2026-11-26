@@ -1,4 +1,8 @@
-# Studium
+# <img src="recursos/icono.svg" width="56" align="left" alt="Icono de Studium" /> Studium
+
+<p align="center"><img src="recursos/icono.svg" width="160" alt="Studium: libro abierto con una chispa" /></p>
+
+<p align="center"><strong>Tu espacio portable para organizar el aprendizaje.</strong><br/>Biblioteca · Notas · Tarjetas · Sesiones de enfoque · Seguimiento</p>
 
 Studium es un espacio local-first para organizar el aprendizaje. Sin cuentas, sin sincronización obligatoria y con una distribución **portable**: extrae/abre el paquete y conserva el archivo de datos junto a la aplicación.
 
