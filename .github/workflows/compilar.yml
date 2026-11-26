@@ -257,6 +257,7 @@ jobs:
           RUN_NUMBER: ${{ github.run_number }}
           SHA: ${{ github.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
         run: |
           cd release-assets
           sha256sum * > SHA256SUMS.txt
@@ -271,7 +272,7 @@ jobs:
             for file in *; do
               if [ -f "$file" ] && [ "$file" != "RELEASE_NOTES.md" ]; then
                 size="$(du -h "$file" | cut -f1)"
-                printf '| `%s` | %s |\\n' "$file" "$size"
+                printf '| `%s` | %s |\n' "$file" "$size"
               fi
             done
             echo
@@ -295,7 +296,8 @@ jobs:
             echo "Descarga `SHA256SUMS.txt` junto a tu archivo y verifica el hash SHA-256."
             echo
             echo "## Información de la compilación"
-            echo "- Commit: ${SHA}"
+            echo "- Commit: [${SHA}](${REPO_URL}/commit/${SHA})"
+            echo "- Mensaje: $(git log -1 --format=%s)"
             echo "- Workflow: [run #${RUN_NUMBER}](${RUN_URL})"
             echo "- Rama: main"
             echo
