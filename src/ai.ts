@@ -18,7 +18,7 @@ PRINCIPIOS:
 - Responde en español por defecto, salvo que el usuario esté practicando otro idioma.
 FORMATO: respuestas claras y útiles, encabezados solo cuando aporten; evita largos bloques, listas excesivas y frases vacías. Si es tutoría, termina con una pregunta o ejercicio concreto para comprobar aprendizaje.
 `;
-const retrievalStop=new Set('para como que con por una uno unos unas los las del desde entre sobre esta este estos esas cuando donde porque pero también más muy sin sus son fue ser tiene hacer pueden cada todo todos quien cual qué cómo and the for with this that from into your about are was has have not can'.split(' '));
+const retrievalStop=new Set<string>('para como que con por una uno unos unas los las del desde entre sobre esta este estos esas cuando donde porque pero tambien mas muy sin sus son fue ser tiene hacer pueden cada todo todos quien cual que como and the for with this that from into your about are was has have not can'.split(' '));
 function normalizeTerms(text:string){return text.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').match(/[a-z0-9]{3,}/g)||[];}
 export function rankContext(query:string,materials:{title:string,subject:string,content:string}[],limit=5){
  const terms=[...new Set(normalizeTerms(query).filter(t=>!retrievalStop.has(t)))];if(!terms.length)return [];
