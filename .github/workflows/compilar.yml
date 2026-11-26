@@ -199,7 +199,6 @@ jobs:
           merge-multiple: true
       - name: Inventario y hashes
         env:
-          RUN_NUMBER: ${{ github.run_number }}
           SHA: ${{ github.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}
@@ -207,7 +206,7 @@ jobs:
           cd release-assets
           sha256sum * > SHA256SUMS.txt
           {
-            echo "# <img src=\"https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/recursos/icono.svg\" width=\"72\" align=\"left\" alt=\"Icono Studium\" /> Studium Portable · compilación ${RUN_NUMBER}"
+            echo "# <img src=\"https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/recursos/icono.svg\" width=\"72\" align=\"left\" alt=\"Icono Studium\" /> Studium Portable"
             echo
             echo "Una aplicación local-first para estudiar, organizar materiales y mantener tus sesiones de aprendizaje. Portable, sin cuentas y sin sincronización obligatoria."
             echo
@@ -249,7 +248,7 @@ jobs:
             echo
             echo "## Build"
             echo "- Commit: [${SHA}](${REPO_URL}/commit/${SHA})"
-            echo "- Workflow: [run ${RUN_NUMBER}](${RUN_URL})"
+            echo "- Workflow: [Ver compilación](${RUN_URL})"
             echo
             echo "## Limitaciones conocidas"
             echo "MVP en desarrollo: no incluye OCR para PDF escaneados, generación con IA, exámenes, audio, anotación con lápiz, sincronización ni cuentas. La extracción y generación de guías desde archivos es local y heurística."
@@ -257,7 +256,30 @@ jobs:
             echo "## Sobre la versión"
             echo "Lanzamiento oficial estable de Studium 0.1.1. Incluye únicamente paquetes portables de escritorio. No incluye instaladores, DEB, DMG, APK ni versiones duplicadas."
           } > RELEASE_NOTES.md
-      - name: Eliminar releases y tags anteriores
+      - name: Publicar una única release portable
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.1.1
+          name: Studium v0.1.1 · Lanzamiento oficial
+          target_commitish: main
+          prerelease: false
+          make_latest: true
+          body_path: release-assets/RELEASE_NOTES.md
+          files: release-assets/*
+      - name: Verificar release estable y assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v0.1.1")"
+          test "$(jq -r .prerelease <<< "$release")" = "false"
+          test "$(jq -r .tag_name <<< "$release")" = "v0.1.1"
+          assets="$(jq -r '.assets[].name' <<< "$release")"
+          for expected in "Studium-Windows-x64-Portable.zip" "Studium-Windows-arm64-Portable.zip" "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage" "Studium-macOS-x64-Portable.zip" "Studium-macOS-arm64-Portable.zip" "RELEASE_NOTES.md" "SHA256SUMS.txt"; do
+            grep -Fxq "$expected" <<< "$assets" || { echo "Falta asset: $expected"; exit 1; }
+          done
+          echo "Release estable v0.1.1 verificada con los ocho assets esperados."
+      - name: Eliminar releases y tags antiguos (solo tras verificación)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -273,13 +295,3 @@ jobs:
             [ -z "$tag" ] && continue
             gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/${tag}"
           done <<< "$old_tags"
-      - name: Publicar una única release portable
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v0.1.1
-          name: Studium v0.1.1 · Lanzamiento oficial
-          target_commitish: main
-          prerelease: false
-          make_latest: true
-          body_path: release-assets/RELEASE_NOTES.md
-          files: release-assets/*
