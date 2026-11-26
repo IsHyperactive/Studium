@@ -311,6 +311,6 @@ jobs:
           name: Studium v0.1.0 · Compilación #${{ github.run_number }}
           target_commitish: main
           prerelease: true
-          make_latest: false
+          make_latest: true
           body_path: release-assets/RELEASE_NOTES.md
           files: release-assets/*
