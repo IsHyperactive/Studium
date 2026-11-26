@@ -20,6 +20,7 @@ FORMATO: respuestas claras y útiles, encabezados solo cuando aporten; evita lar
 `;
 const retrievalStop=new Set<string>(('para como que con por una uno unos unas los las del desde entre sobre esta este estos esas cuando donde porque pero tambien mas muy sin sus son fue ser tiene hacer pueden cada todo todos quien cual que como and the for with this that from into your about are was has have not can').split(' '));
 export function normalizeTerms(text:string):string[]{return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').match(/[a-z0-9]{3,}/g)??[];}
+export function conversationTitle(text:string):string{return text.replace(/\s+/g,' ').trim().slice(0,48)||'Nueva conversación';}
 export type RankedSource={title:string,subject:string,excerpt:string,score:number};
 export function rankContext(query:string,materials:{title:string,subject:string,content:string}[],limit=5){
  const terms=[...new Set(normalizeTerms(query).filter(t=>!retrievalStop.has(t)))];
