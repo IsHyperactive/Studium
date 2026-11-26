@@ -39,11 +39,29 @@ fn save_portable_data(data: String) -> Result<(), String> {
     serde_json::from_str::<serde_json::Value>(&data).map_err(|e| format!("Datos JSON inválidos: {e}"))?;
     let path = data_file()?;
     let temporary = path.with_extension("json.tmp");
+    let backup = path.with_extension("json.bak");
     fs::write(&temporary, data).map_err(|e| e.to_string())?;
-    if path.exists() {
-        fs::remove_file(&path).map_err(|e| e.to_string())?;
+    if backup.exists() {
+        fs::remove_file(&backup).map_err(|e| e.to_string())?;
     }
-    fs::rename(temporary, path).map_err(|e| e.to_string())
+    if path.exists() {
+        fs::rename(&path, &backup).map_err(|e| e.to_string())?;
+    }
+    match fs::rename(&temporary, &path) {
+        Ok(()) => {
+            if backup.exists() {
+                let _ = fs::remove_file(backup);
+            }
+            Ok(())
+        }
+        Err(error) => {
+            if backup.exists() {
+                let _ = fs::rename(&backup, &path);
+            }
+            let _ = fs::remove_file(temporary);
+            Err(error.to_string())
+        }
+    }
 }
 
 #[tauri::command]
