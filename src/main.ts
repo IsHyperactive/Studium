@@ -130,11 +130,11 @@ function sampleDocumentForAI(source:string,max=18000){
 }
 function formatAIStudyMethod(plan:AIStudyPlan,minutes:number){
  const ratios=[.15,.2,.25,.2,.2],split=ratios.map(x=>Math.max(1,Math.round(minutes*x)));split[0]+=minutes-split.reduce((a,b)=>a+b,0);
- return 'PLAN AMPLIADO CON MODELO IA — revisar evidencia y exactitud.\\n'+plan.lessons.map((l,i)=>{
-  const evidence=l.evidence.length?l.evidence.map(x=>'• '+x).join('\\n'):'• No se validaron citas exactas; revisa este bloque en el documento.';
-  const acts=l.activities.map(x=>'• '+x).join('\\n'),qs=l.questions.map((x,j)=>(j+1)+'. '+x).join('\\n');
-  return 'SESIÓN '+(i+1)+' · '+l.title+' — '+minutes+' min\\nOBJETIVO OBSERVABLE: '+l.objective+'\\nEXPLICACIÓN ('+split[0]+' min): '+l.explanation+'\\nEVIDENCIA DEL ARCHIVO:\\n'+evidence+'\\nRECUPERACIÓN ACTIVA ('+split[1]+' min): explica el objetivo sin consultar y luego comprueba lo que omitiste.\\nACTIVIDADES GUIADAS ('+split[2]+' min):\\n'+acts+'\\nTRANSFERENCIA ('+split[3]+' min): aplica las ideas en un caso nuevo, usando solo lo que la fuente respalda.\\nPREGUNTAS:\\n'+qs+'\\nCHECKPOINT ('+split[4]+' min): '+l.checkpoint+'\\nCRITERIO DE PROGRESO: explica el objetivo sin consultar y respalda la respuesta con evidencia; si fallas, revisa la explicación y repite una pregunta.\\n';
- }).join('\\n');
+ return 'PLAN AMPLIADO CON MODELO IA — revisar evidencia y exactitud.\n'+plan.lessons.map((l,i)=>{
+  const evidence=l.evidence.length?l.evidence.map(x=>'• '+x).join('\n'):'• No se validaron citas exactas; revisa este bloque en el documento.';
+  const acts=l.activities.map(x=>'• '+x).join('\n'),qs=l.questions.map((x,j)=>(j+1)+'. '+x).join('\n');
+  return 'SESIÓN '+(i+1)+' · '+l.title+' — '+minutes+' min\nOBJETIVO OBSERVABLE: '+l.objective+'\nEXPLICACIÓN ('+split[0]+' min): '+l.explanation+'\nEVIDENCIA DEL ARCHIVO:\n'+evidence+'\nRECUPERACIÓN ACTIVA ('+split[1]+' min): explica el objetivo sin consultar y luego comprueba lo que omitiste.\nACTIVIDADES GUIADAS ('+split[2]+' min):\n'+acts+'\nTRANSFERENCIA ('+split[3]+' min): aplica las ideas en un caso nuevo, usando solo lo que la fuente respalda.\nPREGUNTAS:\n'+qs+'\nCHECKPOINT ('+split[4]+' min): '+l.checkpoint+'\nCRITERIO DE PROGRESO: explica el objetivo sin consultar y respalda la respuesta con evidencia; si fallas, revisa la explicación y repite una pregunta.\n';
+ }).join('\n');
 }
 async function enhancePlanWithAI(local:GeneratedStudy,minutes:number){
  const sample=sampleDocumentForAI(local.source),outline=local.method.slice(0,7000),userPrompt=studyPlanPrompt(sample,outline,minutes);
