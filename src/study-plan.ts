@@ -3,7 +3,7 @@ const STOP=new Set('este esta estos estas para como pero porque cuando donde sob
 const WORD_RE=/[a-záéíóúüñ]{4,}/gi;
 function words(s:string){return (s.toLowerCase().match(WORD_RE)||[]).map(w=>w.normalize('NFD').replace(/[\u0300-\u036f]/g,''));}
 function keywords(text:string,limit=10){const f=new Map<string,number>();for(const w of words(text))if(!STOP.has(w))f.set(w,(f.get(w)||0)+1);return [...f.entries()].sort((a,b)=>b[1]-a[1]).slice(0,limit).map(x=>x[0]);}
-function sentenceSplit(text:string){return (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[text]).map(x=>x.trim()).filter(x=>x.length>40&&x.length<650&&words(x).length>=8);}
+function sentenceSplit(text:string){return (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[text]).map(x=>x.trim()).filter(x=>x.length>40&&x.length<650&&x.split(/\\s+/).length>=8);}
 export function createLocalStudyPlan(name:string,subject:string,source:string,minutes=30):LocalStudyPlan{
  const clean=source.replace(/\s+/g,' ').trim();if(clean.length<300)throw new Error('El archivo contiene poco texto extraíble. Los PDF escaneados requieren OCR, que no está disponible.');
  const terms=keywords(clean,12),sentences=sentenceSplit(clean),freq=new Map<string,number>();for(const w of words(clean))if(!STOP.has(w))freq.set(w,(freq.get(w)||0)+1);
