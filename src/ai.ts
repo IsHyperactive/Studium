@@ -154,3 +154,17 @@ export function formatAICourseMethod(map:AIBookMap,lessons:(AIDeepLesson&{cards:
  }
  return 'CURSO IA — '+map.bookTitle+'\n'+map.overview+'\nOBJETIVOS DEL CURSO:\n'+map.objectives.map(x=>'• '+x).join('\n')+'\nRUTA Y DEPENDENCIAS:\n'+map.sequence.map((x,i)=>(i+1)+'. '+x).join('\n')+'\nCONEXIONES:\n'+map.connections.map(x=>'• '+x).join('\n')+'\n\n'+blocks.join('\n\n')+'\nREPASO ESPACIADO: repasa preguntas falladas a 1, 3 y 7 días. Antes de abrir el material, intenta recuperarlas sin mirar.\nEVALUACIÓN FINAL: crea una respuesta integradora conectando al menos 3 lecciones; respalda las afirmaciones con fragmentos y separa inferencias.\n';
 }
+
+
+export function buildAILessonBatchPrompt(chunks:AISourceChunk[],map:AIBookMap,minutes:number){
+ const instructions=chunks.map(c=>buildAILessonPrompt(c,map,minutes)).join('\n\n===== SIGUIENTE LECCIÓN =====\n\n');
+ return 'Genera una lista JSON de lecciones, una por cada fragmento fuente en el orden recibido. Mantén los IDs, no combines ni omitas. Devuelve un objeto {"lessons":[...]} donde cada elemento cumple exactamente el esquema solicitado. No uses markdown.\n\n'+instructions;
+}
+export function parseAILessonBatch(raw:string,chunks:AISourceChunk[]){
+ const data=extractJSON(raw),items=Array.isArray(data.lessons)?data.lessons:[];
+ const byId=new Map(items.map((x:any)=>[String(x?.id||''),x]));
+ return chunks.map(chunk=>{
+  const item=byId.get(chunk.id);if(!item)throw new Error('La IA omitió '+chunk.id+'.');
+  return parseAILesson(JSON.stringify(item),chunk);
+ });
+}
