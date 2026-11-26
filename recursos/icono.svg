@@ -1,1 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><defs><linearGradient id="cover" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4e82c2"/><stop offset="1" stop-color="#244878"/></linearGradient><linearGradient id="pages" x1="0" y1="0" x2="0.9" y2="1"><stop stop-color="#fffaf1"/><stop offset="1" stop-color="#e9d7b6"/></linearGradient></defs><rect width="1024" height="1024" rx="230" fill="url(#cover)"/><path d="M210 272c124-63 234-41 302 20v500c-91-67-192-88-302-39z" fill="url(#pages)"/><path d="M814 272c-124-63-234-41-302 20v500c91-67 192-88 302-39z" fill="#e5c995"/><path d="M512 292v500" fill="none" stroke="#426b9f" stroke-width="21" stroke-linecap="round"/><path d="M277 364c74-21 140-10 192 24M277 435c74-21 140-10 192 24M277 506c74-21 140-10 192 24M747 364c-74-21-140-10-192 24M747 435c-74-21-140-10-192 24M747 506c-74-21-140-10-192 24" fill="none" stroke="#91a9c7" stroke-width="18" stroke-linecap="round"/><path d="m755 145 34 82 82 34-82 34-34 82-34-82-82-34 82-34z" fill="#ffe28e"/><circle cx="838" cy="379" r="17" fill="#ffe28e"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+ <defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#163b49"/><stop offset="1" stop-color="#216f73"/></linearGradient>
+  <linearGradient id="page" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff8e9"/><stop offset="1" stop-color="#d7e9dd"/></linearGradient>
+ </defs>
+ <rect x="56" y="56" width="912" height="912" rx="230" fill="url(#bg)"/>
+ <circle cx="720" cy="290" r="160" fill="#f4c76e" opacity=".08"/>
+ <path d="M225 270c130-38 229-18 287 44v438c-89-59-185-79-287-39z" fill="url(#page)" stroke="#f8e9c9" stroke-width="18" stroke-linejoin="round"/>
+ <path d="M799 270c-130-38-229-18-287 44v438c89-59 185-79 287-39z" fill="#c6dfd3" stroke="#f8e9c9" stroke-width="18" stroke-linejoin="round"/>
+ <path d="M512 314v438" fill="none" stroke="#367b78" stroke-width="18" stroke-linecap="round"/>
+ <path d="M282 366c64-18 124-12 179 18M282 430c64-18 124-12 179 18M282 494c64-18 124-12 179 18M742 366c-64-18-124-12-179 18M742 430c-64-18-124-12-179 18M742 494c-64-18-124-12-179 18" fill="none" stroke="#79a9a0" stroke-width="15" stroke-linecap="round"/>
+ <path d="M512 182c-3 79-46 119-127 129 81 10 124 50 127 129 4-79 47-119 128-129-81-10-124-50-128-129z" fill="#ffd782"/>
+ <path d="M512 195c-3 64-37 96-101 104 64 8 98 40 101 104 3-64 37-96 101-104-64-8-98-40-101-104z" fill="#fff3c4"/>
+ <circle cx="765" cy="647" r="26" fill="#ffd782"/>
+</svg>
