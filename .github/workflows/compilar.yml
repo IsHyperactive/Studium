@@ -61,6 +61,22 @@ jobs:
           $exe = "src-tauri/target/${{ matrix.target }}/release/studium.exe"
           if (!(Test-Path $exe)) { throw "No se encontró el ejecutable: $exe" }
           Copy-Item $exe "$out/Studium.exe"
+      - name: Firma Authenticode (si hay certificado configurado)
+        if: ${{ secrets.WINDOWS_SIGNING_CERT_BASE64 != '' && secrets.WINDOWS_SIGNING_CERT_PASSWORD != '' }}
+        env:
+          CERT_B64: ${{ secrets.WINDOWS_SIGNING_CERT_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_SIGNING_CERT_PASSWORD }}
+        shell: pwsh
+        run: |
+          $certPath = Join-Path $env:RUNNER_TEMP 'studium-signing.pfx'
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:CERT_B64))
+          $exe = 'Studium-Windows-${{ matrix.arch }}-Portable/Studium.exe'
+          $signTool = Get-ChildItem "$env:ProgramFiles(x86)\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName -Descending | Select-Object -First 1
+          if (!$signTool) { throw 'SignTool not found' }
+          & $signTool.FullName sign /fd SHA256 /f $certPath /p $env:CERT_PASSWORD /tr https://timestamp.digicert.com /td SHA256 $exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $signTool.FullName verify /pa /v $exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item LICENSE "$out/LICENSE"
           @"
           Studium Portable
