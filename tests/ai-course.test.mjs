@@ -9,7 +9,7 @@ test('segmenta un libro por encabezados, conserva contenido y aumenta profundida
  const normal=splitSourceForAI(book,'standard'),deep=splitSourceForAI(book,'deep'),very=splitSourceForAI(book,'very-deep');
  assert.ok(normal.length>=9);assert.ok(deep.length>=normal.length);assert.ok(very.length>=deep.length);
  assert.ok(deep.length<=48);assert.equal(deep[0].index,0);assert.equal(deep.at(-1).total,deep.length);
- const compact=(s)=>s.replace(/\\s+/g,' ');for(const chunk of deep)assert.ok(compact(book).includes(compact(chunk.content)),'El segmento debe preservar texto fuente');
+ const compact=(s)=>s.replace(/\s+/g,' ');for(const chunk of deep)assert.ok(compact(book).includes(compact(chunk.content)),'El segmento debe preservar texto fuente');
  assert.ok(deep.some(c=>/Capítulo 6/.test(c.title)));
 });
 test('el mapa de curso no acepta omitir segmentos',()=>{
