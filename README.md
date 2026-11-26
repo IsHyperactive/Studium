@@ -2,18 +2,25 @@
 
 Studium es una aplicación de escritorio local-first para organizar el aprendizaje. Sin cuentas ni sincronización obligatoria; los paquetes portables conservan sus datos junto a la aplicación.
 
-## Crear una guía desde un archivo
+## Crear un curso desde un libro o documento
 
-- Importa PDF, EPUB, DOCX, TXT y Markdown; la extracción se realiza en el dispositivo y conserva, cuando el formato lo permite, encabezados y separación de párrafos para contextualizar la guía.
-- Genera un resumen diverso, esquema, conceptos clave, preguntas y tarjetas vinculadas a fragmentos del archivo.
-- El plan local divide el material en 2–24 lecciones adaptativas (aprox. 350 palabras o una sección), conserva el orden del documento y cubre cada capítulo con preguntas específicas. Cada lección incluye objetivos observables, evidencia, preguntas de comprensión, recuperación activa, lectura selectiva, práctica, checkpoint de 6 puntos y corrección; muestra alertas cuando faltan encabezados o conceptos. El dominio requiere 5/6 en dos intentos separados.
-- El plan local es heurístico, no IA. Opcionalmente activa “Ampliar el plan con el modelo IA conectado”: genera explicaciones, actividades, preguntas y citas exactas verificadas contra extractos del archivo. La IA recibe muestras seleccionadas, no necesariamente todo el libro; si falla, se conserva el plan local y se informa.
-- Tutor IA integrado: chat con proveedor OpenAI-compatible (Ollama local, OpenAI o endpoint personalizado), conexión configurable, contexto recuperado de tu biblioteca, instrucciones de tutoría, recuperación de principios pedagógicos y conversación local. El tutor no está incluido como modelo ni se entrena: debes conectar/instalar un modelo y puede cometer errores. La clave API se guarda en el almacenamiento local del navegador/app y no se exporta en el backup.
-- Los PDF escaneados requieren OCR, aún no incluido. Revisa los fragmentos y el plan: las heurísticas pueden omitir o interpretar mal texto extraído.
+- Importa PDF, EPUB, DOCX, TXT y Markdown. La extracción se realiza en el dispositivo y conserva encabezados, apartados y separación de párrafos cuando el formato lo permite.
+- Genera resumen, índice, conceptos clave, preguntas y tarjetas ancladas al material.
+- **Curso IA por etapas:** primero construye un mapa del libro (secciones, orden, objetivos, prerequisitos y conexiones), después desarrolla las lecciones de cada segmento por separado, en vez de resumir unas pocas muestras del documento.
+- Elige profundidad estándar, profunda o muy profunda. La segmentación puede crear hasta 48 unidades; cada lección incluye objetivo medible, prerequisitos, ideas clave, explicación paso a paso, ejemplo respaldado o claramente hipotético, actividades variadas, preguntas progresivas con respuestas, evidencia literal y checkpoints.
+- La generación valida las citas contra el texto extraído. Si una lección IA falla, Studium conserva un respaldo heurístico claramente identificado y muestra advertencias de cobertura. La IA puede equivocarse y no se garantiza que cubra cada detalle del libro.
+- El plan local sin modelo sigue disponible, es heurístico y menos profundo. Los PDF escaneados requieren OCR, aún no incluido.
+
+## Tutor IA
+
+- Chat configurable con Ollama local, OpenAI o cualquier endpoint compatible con Chat Completions.
+- Recuperación contextual por secciones de tus materiales: el tutor busca pasajes relacionados y muestra las fuentes recuperadas.
+- Enseñanza progresiva, práctica, diagnóstico de errores, quizzes, pistas y conexiones entre conceptos.
+- Para libros y tutoría compleja, recomendamos un modelo de **7B parámetros o superior** y contexto amplio; modelos pequeños suelen simplificar. La capacidad depende del modelo conectado y del equipo/proveedor.
+- Studium no incluye ni entrena un modelo propio. Los modelos locales deben instalarse; los proveedores remotos reciben el contexto seleccionado. La clave se guarda localmente y no se exporta en el backup.
 
 ## Funciones
 
-- Tutor IA: chat configurable y tutoría contextual a partir de tus materiales, con prompts de explicación, quiz, conexiones y diagnóstico de lagunas.
 - Biblioteca: crear, editar, eliminar, buscar y filtrar materiales por materia.
 - Notas y enlaces.
 - Tarjetas pregunta/respuesta y repaso por intervalos básicos.
@@ -23,7 +30,9 @@ Studium es una aplicación de escritorio local-first para organizar el aprendiza
 
 ## Descargas portables
 
-Una única release oficial:
+La última release estable publicada se encuentra aquí:
+
+[Descargar Studium](https://github.com/IsHyperactive/Studium/releases)
 
 | Sistema | Arquitectura | Formato |
 |---|---|---|
@@ -34,8 +43,6 @@ Una única release oficial:
 | macOS | Intel x64 | ZIP con app |
 | macOS | Apple Silicon ARM64 | ZIP con app |
 
-[Descargar Studium](https://github.com/IsHyperactive/Studium/releases)
-
 Windows necesita WebView2 Runtime. Los EXE no están firmados si no se configura el certificado de Authenticode en GitHub Secrets. Linux puede requerir FUSE 2. macOS no está firmado ni notarizado.
 
 ## Datos y portabilidad
@@ -44,7 +51,7 @@ En escritorio se guarda Studium-data.json junto al ejecutable o bundle. Mantén 
 
 ## CI y desarrollo
 
-Actions verifica TypeScript, pruebas del plan local y frontend. La release incluye notas, commit, workflow y SHA-256.
+Actions verifica TypeScript, pruebas y frontend. La publicación portable se ejecuta manualmente para evitar reemplazar la release estable en cada push de desarrollo.
 
 Requisitos: Node, npm, Rust y prerrequisitos Tauri.
 
