@@ -9,7 +9,7 @@ const docs=[
  {title:'Matemáticas',subject:'Álgebra',content:'Las ecuaciones lineales permiten encontrar una incógnita. Se despeja la variable con operaciones inversas y se comprueba sustituyendo el resultado.'}
 ];
 test('normaliza títulos de conversaciones y recorta longitud',()=>{
- assert.equal(conversationTitle('  Hola\n\n  Studium   IA  '),'Hola Studium IA');
+ assert.equal(conversationTitle('  Hola'+String.fromCharCode(10)+String.fromCharCode(10)+'  Studium   IA  '),'Hola Studium IA');
  assert.equal(conversationTitle('  '),'Nueva conversación');
  assert.equal(conversationTitle('a'.repeat(60)).length,48);
 });
