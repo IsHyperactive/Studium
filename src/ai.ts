@@ -69,4 +69,14 @@ export function studyPlanPrompt(sourceSample:string,localOutline:string,sessionM
  EXTRACTOS DEL DOCUMENTO:
  ${sourceSample}`;
 }
-export async function requestAI(settings:AISettings,key:string,messages:{role:'system'|'user'|'assistant',content:string}[],signal?:AbortSignal){const base=settings.baseUrl.trim().replace(/\/$/,'');if(!base)throw new Error('Configura la URL del servicio IA.');const headers:Record<string,string>={'Content-Type':'application/json'};if(key.trim())headers.Authorization='Bearer '+key.trim();const response=await fetch(base+'/chat/completions',{method:'POST',headers,signal,body:JSON.stringify({model:settings.model,temperature:settings.temperature,messages})});if(!response.ok){const details=await response.text().catch(()=> '');throw new Error('IA '+response.status+': '+details.slice(0,500));}const data=await response.json();const content=data.choices?.[0]?.message?.content;if(typeof content!=='string'||!content.trim())throw new Error('El proveedor devolvió una respuesta vacía.');return content.trim();}
+export async function requestAI(settings:AISettings,key:string,messages:{role:'system'|'user'|'assistant',content:string}[],signal?:AbortSignal){
+ const base=settings.baseUrl.trim().replace(/\/$/,'');if(!base)throw new Error('Configura la URL del servicio IA.');
+ const headers:Record<string,string>={'Content-Type':'application/json'};if(key.trim())headers.Authorization='Bearer '+key.trim();
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),120000),cancel=()=>controller.abort();if(signal)signal.addEventListener('abort',cancel,{once:true});
+ try{
+  const response=await fetch(base+'/chat/completions',{method:'POST',headers,signal:controller.signal,body:JSON.stringify({model:settings.model,temperature:settings.temperature,messages})});
+  if(!response.ok){const details=await response.text().catch(()=> '');throw new Error('IA '+response.status+': '+details.slice(0,500));}
+  const data=await response.json(),content=data.choices?.[0]?.message?.content;if(typeof content!=='string'||!content.trim())throw new Error('El proveedor devolvió una respuesta vacía.');return content.trim();
+ }catch(err){if(controller.signal.aborted)throw new Error('La solicitud IA se canceló o superó el límite de 120 segundos.');throw err;}
+ finally{clearTimeout(timer);if(signal)signal.removeEventListener('abort',cancel);}
+}
