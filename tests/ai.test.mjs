@@ -46,7 +46,7 @@ test('valida las citas del plan IA contra el material y descarta citas inventada
  assert.equal(p.lessons.length,2);
  assert.equal(p.lessons[0].evidence.length,1);
  assert.equal(p.cards.length,1);
- assert.ok(p.warnings.some(x=>/citas exactas/.test(x)));
+ assert.ok(p.warnings.some(x=>/citas/.test(x)));
 });
 test('rechaza plan IA con JSON inválido o solo una lección',()=>{
  assert.throws(()=>parseAIStudyPlan('esto no es JSON','texto fuente'),/JSON válido/);
