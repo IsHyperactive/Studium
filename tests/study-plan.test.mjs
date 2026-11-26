@@ -46,3 +46,19 @@ test('la comprobación cubre todos los bloques incluso en documentos largos',()=
  assert.equal(focuses.length,5);
  for(const term of focuses)assert.ok(p.questions.some(q=>q.toLowerCase().includes(term.toLowerCase())),'La comprobación no cubre el concepto '+term);
 });
+
+test('un libro con capítulos se divide en muchas lecciones con preguntas por capítulo',()=>{
+ const chapters=Array.from({length:12},(_,i)=>'# Capítulo '+(i+1)+' · Tema '+(i+1)+'\n\n'+
+  'La materia del capítulo '+(i+1)+' explica un mecanismo específico y sus características principales. '+
+  'El texto describe cómo este mecanismo funciona y qué condiciones influyen en su comportamiento. '+
+  'También presenta una consecuencia importante y explica por qué se relaciona con el tema estudiado. '+
+  'Comprender este apartado permite reconstruir la explicación y verificarla usando las afirmaciones del material.').join('\n\n');
+ const p=createLocalStudyPlan('Libro completo.epub','Curso',chapters,30);
+ assert.ok(p.sessionCount>=10,'Debe dividir un libro extenso en más de cinco lecciones');
+ assert.ok(p.sessionCount<=24,'La granularidad tiene un límite razonable');
+ assert.ok(p.outline.length>=10,'La ruta conserva capítulos separados');
+ assert.ok(p.questions.length>=20,'Debe incluir preguntas específicas por lección');
+ for(let i=1;i<=10;i++)assert.ok(p.method.includes('Capítulo '+i),'La sesión debe cubrir capítulo '+i);
+ const stages=p.method.match(/SESIÓN \d+ · ([^—]+) —/g)||[];
+ assert.ok(stages.length>=10);
+});
