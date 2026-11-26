@@ -198,7 +198,7 @@ jobs:
             runner: macos-15-intel
             target: x86_64-apple-darwin
           - arch: arm64
-            runner: macos-15
+            runner: macos-15-intel
             target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v4
@@ -361,6 +361,13 @@ jobs:
           for name in "Studium-macOS-x64-Portable.zip" "Studium-macOS-arm64-Portable.zip"; do
             test -s "${name}"
             unzip -l "${name}" | grep -q "Studium.app/Contents/Info.plist"
+          done
+          for arch in x64 arm64; do
+            zip="Studium-macOS-${arch}-Portable.zip"
+            binary="${check}/studium-${arch}"
+            unzip -p "${zip}" "Studium.app/Contents/MacOS/studium" > "${binary}"
+            file "${binary}" | grep -q "Mach-O"
+            if [ "${arch}" = "x64" ]; then file "${binary}" | grep -q "x86_64"; else file "${binary}" | grep -q "arm64"; fi
           done
           if grep -Eiq 'compilación[[:space:]]+[0-9]+|build[[:space:]]+[0-9]+' RELEASE_NOTES.md; then
             echo "Las notas contienen un número de compilación interno."
