@@ -60,3 +60,15 @@ test('prompt de plan pide estructura de lecciones y citas exactas',()=>{
  assert.match(p,/JSON válido/);
  assert.match(p,/30 minutos/);
 });
+
+test('la recuperación mantiene títulos de sección y selecciona pasajes relevantes de libros largos',()=>{
+ const long=[{title:'Manual de biología',subject:'Biología',content:'# Fotosíntesis\n\nLa clorofila absorbe luz en los cloroplastos y permite convertir energía luminosa en energía química.\n\n# Respiración celular\n\nLa mitocondria participa en la respiración celular y el ATP proporciona energía.\n\n# Genética\n\nLos genes contienen información hereditaria y las variantes producen diferencias.'}];
+ const result=buildMaterialContext('clorofila y energía luminosa',long,1,2400);
+ assert.match(result,/FUENTE: Manual de biología/);
+ assert.match(result,/SECCIÓN: Fotosíntesis/);
+ assert.match(result,/clorofila/);
+ assert.ok(!result.includes('SECCIÓN: Genética'));
+});
+test('el modelo local recomendado es 7B en vez del pequeño 3B',()=>{
+ assert.equal(defaultAI.model,'qwen2.5:7b');
+});
