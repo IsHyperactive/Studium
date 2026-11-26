@@ -140,6 +140,22 @@ jobs:
           }
           if ($p.MainWindowHandle -eq 0) { throw "No se detectó una ventana principal de Studium tras 20 segundos" }
             Write-Host "GUI smoke test passed: PID=$($p.Id), HWND=$($p.MainWindowHandle)"
+            $processes = Get-CimInstance Win32_Process
+            $descendants = [System.Collections.Generic.HashSet[int]]::new()
+            [void]$descendants.Add([int]$p.Id)
+            do {
+              $changed = $false
+              foreach ($child in $processes) {
+                if ($descendants.Contains([int]$child.ParentProcessId) -and !$descendants.Contains([int]$child.ProcessId)) {
+                  [void]$descendants.Add([int]$child.ProcessId)
+                  $changed = $true
+                }
+              }
+            } while ($changed)
+            $terminalNames = @('cmd.exe','powershell.exe','pwsh.exe','wt.exe','WindowsTerminal.exe','conhost.exe')
+            $terminalChildren = @($processes | Where-Object { $descendants.Contains([int]$_.ProcessId) -and $_.ProcessId -ne $p.Id -and $terminalNames -contains $_.Name })
+            if ($terminalChildren.Count -gt 0) { throw "Studium lanzó procesos de terminal: $($terminalChildren.Name -join ', ')" }
+            Write-Host "No terminal/shell descendants detected."
           } finally {
             if (!$p.HasExited) {
               if (!$p.CloseMainWindow()) { $p.Kill() }
