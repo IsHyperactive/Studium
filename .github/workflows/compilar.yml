@@ -71,9 +71,9 @@ jobs:
         env:
           CERT_B64: ${{ secrets.WINDOWS_SIGNING_CERT_BASE64 }}
           CERT_PASSWORD: ${{ secrets.WINDOWS_SIGNING_CERT_PASSWORD }}
-        if: ${{ env.CERT_B64 != '' && env.CERT_PASSWORD != '' }}
         shell: pwsh
         run: |
+          if (!$env:CERT_B64 -or !$env:CERT_PASSWORD) { Write-Host 'No certificate secrets configured; leaving Windows exe unsigned.'; exit 0 }
           $certPath = Join-Path $env:RUNNER_TEMP 'studium-signing.pfx'
           [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:CERT_B64))
           $exe = "Studium-Windows-${{ matrix.arch }}-Portable/Studium.exe"
