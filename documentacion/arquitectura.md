@@ -1,40 +1,41 @@
 # Arquitectura de Studium
 
-## Estado actual
-El MVP ya no es solo una pantalla de muestra: incluye interfaz y flujos local-first. No existe backend ni sincronización.
+## Estado
+MVP local-first de escritorio, distribuido en una sola release portable. No tiene backend, cuenta ni sincronización.
 
 ## Stack
-- Tauri 2 + Rust para el contenedor.
+- Tauri 2 + Rust (contenedor y comandos locales).
 - Vite + TypeScript sin framework.
-- CSS responsive y tema del sistema.
-- localStorage, clave `studium-local-v1`, estructura JSON.
+- CSS adaptable y modo claro/oscuro del sistema.
+- JSON local portable `Studium-data.json`; localStorage queda como respaldo/migración para navegador.
 
-## Funciones
-- Materiales CRUD, búsqueda, filtros por materia, apuntes/libros/enlaces/recursos.
-- Tarjetas de repaso con intervalos básicos ajustados por respuesta.
-- Sesiones de estudio, timer, pausa, reinicio, historial y registro manual.
-- Dashboard y objetivo diario.
+## Funciones implementadas
+- Materiales CRUD, búsqueda, filtros por materia y tipos.
+- Editor sencillo de apuntes y enlaces.
+- Tarjetas de repaso con intervalos básicos.
+- Temporizador, pausa, reinicio, historial y registro manual.
+- Dashboard y meta diaria.
 - Respaldo JSON importar/exportar y borrado de datos.
 
-## Privacidad y persistencia
-Los datos se guardan en el WebView local al dispositivo. No hay cuenta, sync o cifrado. El respaldo es JSON de texto, así que debe guardarse de forma privada. Los datos pueden perderse al borrar datos de la aplicación o desinstalar; exporta respaldo periódicamente.
+## Almacenamiento portable
+La shell Rust expone `load_portable_data`, `save_portable_data` y `portable_data_path`. El archivo se crea junto al ejecutable; AppImage usa la ruta del archivo AppImage y macOS coloca los datos junto al bundle `.app`. Mantén `Studium-data.json` con la aplicación al mover/copiar la carpeta. La carpeta requiere permisos de escritura.
+
+El frontend usa localStorage como respaldo y migra sus datos existentes al archivo portable en el primer inicio de escritorio cuando este no existe. En navegador, permanece en localStorage.
+
+## Distribución
+Solo paquetes portables:
+- Windows x64 y ARM64: ZIP con `Studium.exe`.
+- Linux x64 y ARM64: AppImage.
+- macOS Intel y Apple Silicon: ZIP con bundle `.app`.
+
+No se publican NSIS, DEB, DMG, APK ni versiones redundantes. Cada build exitoso actualiza la única release `v0.1.0-portable` y elimina releases/tags de distribución anteriores.
 
 ## Archivos principales
 - `src/main.ts`: lógica, vistas, formularios y acciones.
-- `src/style.css`: estilos adaptables y modo oscuro.
-- `src-tauri/src/`: shell Rust.
-- `src-tauri/tauri.conf.json`: configuración.
-- `.github/workflows/compilar.yml`: CI.
+- `src/style.css`: diseño adaptable, tema claro/oscuro.
+- `src-tauri/src/lib.rs`: almacenamiento portable.
+- `src-tauri/tauri.conf.json`: configuración Tauri.
+- `.github/workflows/compilar.yml`: CI y publicación unificada.
 
-## Verificación local
-```sh
-npm install
-npm run typecheck
-npm run build
-npm run tauri dev
-```
-
-Android necesita SDK, NDK y JDK. La inicialización Android se realiza con Tauri CLI en el entorno de compilación.
-
-## Pendiente
-Lectura/importación PDF y EPUB, exámenes, repetición espaciada más sólida y tests, persistencia robusta/migraciones, adjuntos, backup automático, sync opcional, accesibilidad, lápiz/gestos y pruebas en dispositivos reales.
+## Limitaciones conocidas
+No hay importación/lectura de PDF o EPUB, OCR, exámenes, IA, audio, lápiz, gestos, sync, cifrado ni pruebas automatizadas de los flujos. Las funciones actuales necesitan pruebas en hardware y revisión de accesibilidad.
