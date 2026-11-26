@@ -187,9 +187,17 @@ jobs:
           cd release-assets
           sha256sum * > SHA256SUMS.txt
           {
-            echo "# Studium Portable · compilación ${RUN_NUMBER}"
+            echo "# <img src=\"https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/recursos/icono.svg\" width=\"72\" align=\"left\" alt=\"Icono Studium\" /> Studium Portable · compilación ${RUN_NUMBER}"
             echo
-            echo "Una sola publicación con paquetes portables de escritorio. No se publican instaladores, DEB, DMG, APK ni paquetes redundantes."
+            echo "Una aplicación local-first para estudiar, organizar materiales y mantener tus sesiones de aprendizaje. Portable, sin cuentas y sin sincronización obligatoria."
+            echo
+            echo "## Qué puedes hacer"
+            echo "- **Biblioteca:** añade, edita, elimina, busca y filtra materiales por materia. Organiza apuntes, libros, enlaces y recursos."
+            echo "- **Notas:** escribe y guarda notas de estudio."
+            echo "- **Tarjetas de repaso:** crea tarjetas de pregunta/respuesta y repásalas con intervalos básicos."
+            echo "- **Sesiones de enfoque:** temporizador de 15, 25, 45 o 60 minutos; pausa, reinicio y registro de sesiones."
+            echo "- **Progreso:** consulta minutos de estudio, objetivos diarios, materiales, tarjetas pendientes y materias."
+            echo "- **Respaldo:** exporta e importa tus datos en JSON."
             echo
             echo "## Descargas"
             echo "| Plataforma | Arquitectura | Formato |"
@@ -215,7 +223,10 @@ jobs:
             echo "- Workflow: [run ${RUN_NUMBER}](${RUN_URL})"
             echo
             echo "## Limitaciones conocidas"
-            echo "Studium sigue en desarrollo. No incluye instaladores ni Android en esta distribución portable."
+            echo "MVP en desarrollo: aún no incluye importación/lectura integrada de PDF o EPUB, OCR, exámenes, IA, audio, anotación con lápiz, sincronización ni cuentas."
+            echo
+            echo "## Sobre la versión"
+            echo "Esta publicación contiene únicamente paquetes portables de escritorio. No incluye instaladores, DEB, DMG, APK ni versiones duplicadas."
           } > RELEASE_NOTES.md
       - name: Eliminar releases y tags anteriores
         env:
