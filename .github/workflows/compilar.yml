@@ -339,6 +339,67 @@ jobs:
             grep -Fxq "$expected" <<< "$assets" || { echo "Falta asset: $expected"; exit 1; }
           done
           echo "Release estable v0.1.1 verificada con los ocho assets esperados."
+      - name: Descargar y verificar contenido, SHA256 y formatos
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          check="${RUNNER_TEMP}/release-check"
+          mkdir -p "${check}"
+          gh release download v0.1.1 --repo "${GITHUB_REPOSITORY}" --dir "${check}"
+          cd "${check}"
+          sha256sum -c SHA256SUMS.txt
+          test "$(wc -l < SHA256SUMS.txt)" -eq 6
+          for name in "Studium-Windows-x64-Portable.zip" "Studium-Windows-arm64-Portable.zip"; do
+            test -s "${name}"
+            unzip -l "${name}" | grep -Eq 'Studium.exe        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v0.1.1" --jq .id)"
+          expected=( "RELEASE_NOTES.md" "SHA256SUMS.txt" "Studium-Windows-x64-Portable.zip" "Studium-Windows-arm64-Portable.zip" "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage" "Studium-macOS-x64-Portable.zip" "Studium-macOS-arm64-Portable.zip" )
+          while IFS=$'\t' read -r asset_id asset_name; do
+            [ -z "${asset_id}" ] && continue
+            if ! printf '%s\n' "${expected[@]}" | grep -Fxq "${asset_name}"; then
+              gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}"
+              echo "Eliminado asset obsoleto: ${asset_name}"
+            fi
+          done < <(gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}" --jq '.assets[] | [.id,.name] | @tsv')
+          actual="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v0.1.1" --jq '.assets[].name' | sort)"
+          expected_sorted="$(printf '%s\n' "${expected[@]}" | sort)"
+          diff -u <(printf '%s\n' "${expected_sorted}") <(printf '%s\n' "${actual}")
+          echo "Release contiene únicamente los 8 assets oficiales."
+      - name: Eliminar releases y tags antiguos (solo tras verificación)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          keep_tag="v0.1.1"
+          old_releases="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/releases" --jq ".[] | select(.tag_name != \"${keep_tag}\") | .id")"
+          while IFS= read -r release_id; do
+            [ -z "$release_id" ] && continue
+            gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${release_id}"
+          done <<< "$old_releases"
+          old_tags="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/tags" --jq ".[] | select(.name != \"${keep_tag}\") | .name")"
+          while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
+            gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/${tag}"
+          done <<< "$old_tags"
+
+          done
+          for name in "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage"; do
+            test -s "${name}"
+            file "${name}" | grep -q ELF
+          done
+          for name in "Studium-macOS-x64-Portable.zip" "Studium-macOS-arm64-Portable.zip"; do
+            test -s "${name}"
+            unzip -l "${name}" | grep -q "Studium.app/Contents/Info.plist"
+          done
+          if grep -Eiq 'compilación[[:space:]]+[0-9]+|build[[:space:]]+[0-9]+' RELEASE_NOTES.md; then
+            echo "Las notas contienen un número de compilación interno."
+            exit 1
+          fi
+          echo "Se verificaron los seis paquetes, sus hashes, los formatos y las notas públicas."
       - name: Eliminar assets sobrantes de la release
         env:
           GH_TOKEN: ${{ github.token }}
