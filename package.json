@@ -18,6 +18,9 @@
     "sharp": "^0.33.5"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.0.0"
+    "@tauri-apps/api": "^2.0.0",
+    "pdfjs-dist": "^4.10.38",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.8.0"
   }
 }
