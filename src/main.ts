@@ -4,7 +4,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import JSZip from 'jszip';
 import mammoth from 'mammoth';
-import {defaultAI, STUDIUM_LEARNING_CORE, rankContext, requestAI, type AISettings, type AIMessage} from './ai';
+import {defaultAI, STUDIUM_LEARNING_CORE, rankContext, requestAI, generateStudy, type AISettings, type AIMessage} from './ai';
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 type Material={id:string,title:string,subject:string,type:'note'|'book'|'link'|'file',content:string,url?:string,created:number,updated:number};
 type Flash={id:string,front:string,back:string,subject:string,due:number,interval:number,reps:number};
