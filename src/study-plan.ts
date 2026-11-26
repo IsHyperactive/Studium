@@ -99,7 +99,7 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
   }
   if(!added)break;
  }
- const questions=[...selectedQuestions.slice(0,8),
+ const questions=[...selectedQuestions.slice(0,60),
   'Aplica una idea del material a un caso hipotético: explica el razonamiento y qué fragmento respalda el concepto (no inventes hechos).',
   'Sin consultar, reconstruye el esquema y resume el documento en 5–7 frases; compara después y anota lo que omitiste'
  ].slice(0,60);
@@ -155,5 +155,5 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
   'REGISTRO DE PROGRESO: por sesión anota puntuación /6, concepto que fallaste y si ya puedes explicarlo sin mirar. Marca dominio solo con 5/6 o más en dos intentos separados.',
   'CONTROL DE CALIDAD: la extracción, segmentación y selección de conceptos son heurísticas locales. Revisa títulos, fragmentos y preguntas. Si el archivo es escaneado, tiene tablas complejas o la extracción pierde el orden, la guía puede ser incompleta; Studium no añade conocimiento externo.'
  ].join('\n');
- return{name,subject,source:raw,summary,outline,terms,cards,questions:[...new Set([...questions.slice(0,8),...questions.slice(-2)])].slice(0,10),method,sessionCount,minutesPerSession:duration,warnings};
+ return{name,subject,source:raw,summary,outline,terms,cards,questions:[...new Set(questions)].slice(0,60),method,sessionCount,minutesPerSession:duration,warnings};
 }
