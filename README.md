@@ -21,7 +21,7 @@ Studium es un espacio local-first para organizar el aprendizaje. Sin cuentas, si
 - Progreso: minutos diarios, objetivo, materiales, tarjetas pendientes y materias.
 - Respaldo: exportar/importar JSON y borrar los datos locales.
 
-**Limitaciones:** el método se genera con heurísticas locales (no IA); no hay OCR para documentos escaneados, exámenes, audio, anotaciones con lápiz, sincronización ni cuentas. Es un MVP; algunas funciones necesitan pruebas en dispositivos reales.
+**Base pedagógica:** Studium incluye un corpus educativo propio inicial y recuperación de conceptos para orientar el tutor y el método de estudio. No entrena los pesos de un modelo ni significa que el chat IA ya esté integrado en la interfaz.\n\n**Limitaciones:** el método se genera con heurísticas locales; el tutor IA todavía no está conectado a la interfaz. No hay OCR para documentos escaneados, exámenes interactivos, audio, anotaciones con lápiz, sincronización ni cuentas. Es un MVP; algunas funciones necesitan pruebas en dispositivos reales.
 
 ## Distribución portable única
 Cada compilación reemplaza la release anterior. No se publican instaladores, DEB, DMG, APK ni archivos duplicados.
