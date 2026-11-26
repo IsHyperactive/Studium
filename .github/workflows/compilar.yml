@@ -131,11 +131,16 @@ jobs:
         run: npm run build
       - name: Crear AppImage portable
         run: npm run tauri build -- --target ${{ matrix.target }} --bundles appimage
+      - name: Renombrar AppImage
+        run: |
+          APP="$(find src-tauri/target/${{ matrix.target }}/release/bundle/appimage -maxdepth 1 -name '*.AppImage' -print -quit)"
+          test -n "$APP"
+          cp "$APP" "Studium-0.1.1-Linux-${{ matrix.arch }}.AppImage"
       - name: Subir paquete
         uses: actions/upload-artifact@v4
         with:
           name: Studium-Linux-${{ matrix.arch }}-Portable
-          path: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
+          path: Studium-0.1.1-Linux-${{ matrix.arch }}.AppImage
           if-no-files-found: error
           retention-days: 14
 
