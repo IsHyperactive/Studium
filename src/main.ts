@@ -11,7 +11,8 @@ type Material={id:string,title:string,subject:string,type:'note'|'book'|'link'|'
 type Flash={id:string,front:string,back:string,subject:string,due:number,interval:number,reps:number};
 type GeneratedStudy={name:string,subject:string,source:string,summary:string,outline:string[],terms:string[],cards:{front:string,back:string}[],questions:string[],method:string,aiUsed?:boolean};
 type Study={id:string,subject:string,minutes:number,date:number};
-type ChatConversation={id:string,title:string,messages:AIMessage[],updated:number};\ntype Store={materials:Material[],cards:Flash[],sessions:Study[],goal:number,streak:number,lastDay:string,chat:AIMessage[],conversations:ChatConversation[],activeConversationId:string};
+type ChatConversation={id:string,title:string,messages:AIMessage[],updated:number};
+type Store={materials:Material[],cards:Flash[],sessions:Study[],goal:number,streak:number,lastDay:string,chat:AIMessage[],conversations:ChatConversation[],activeConversationId:string};
 const KEY='studium-local-v1',AI_KEY='studium-ai-settings-v1',base:Store={materials:[],cards:[],sessions:[],goal:30,streak:0,lastDay:'',chat:[],conversations:[],activeConversationId:''};
 let aiSettings:AISettings=(()=>{try{return {...defaultAI,...JSON.parse(localStorage.getItem(AI_KEY)||'{}')};}catch{return {...defaultAI};}})(),aiToken='',aiBusy=false,aiError='',aiController:AbortController|undefined;
 let store:Store=read(),view='home',search='',subjectFilter='all',timerMinutes=25,seconds=1500,ticking=false,focusSubject='',timerId:number|undefined,showBack=false,current:Flash|undefined;let generatedStudy:GeneratedStudy|undefined;let quizSession:{questions:QuizQuestion[],index:number,score:number,scores:(0|1|2|null)[],topic:string,sources:string[],answer?:string}|undefined;
