@@ -53,6 +53,19 @@ jobs:
         run: npm run test
       - name: Compilar frontend
         run: npm run build
+      - name: Compilar ejecutable de depuración (sin consola)
+        run: cargo build --manifest-path src-tauri/Cargo.toml --target ${{ matrix.target }}
+      - name: Verificar subsistema GUI en debug
+        shell: pwsh
+        run: |
+          $exe = "src-tauri/target/${{ matrix.target }}/debug/studium.exe"
+          if (!(Test-Path $exe)) { throw "Debug executable missing: $exe" }
+          $bytes = [IO.File]::ReadAllBytes($exe)
+          $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+          if ([BitConverter]::ToUInt32($bytes, $peOffset) -ne 0x00004550) { throw "Invalid PE signature" }
+          $subsystem = [BitConverter]::ToUInt16($bytes, $peOffset + 24 + 68)
+          if ($subsystem -ne 2) { throw "Debug build must use GUI subsystem (2), got $subsystem" }
+          Write-Host "Verified debug Windows GUI subsystem: $subsystem"
       - name: Compilar ejecutable sin instalador
         run: cargo build --manifest-path src-tauri/Cargo.toml --release --target ${{ matrix.target }}
       - name: Verificar subsistema GUI del ejecutable
@@ -103,6 +116,20 @@ jobs:
         run: |
           $out = "Studium-Windows-${{ matrix.arch }}-Portable"
           Compress-Archive -Path "$out/*" -DestinationPath "$out.zip" -Force
+      - name: Verificar que el ZIP final contiene un ejecutable GUI
+        shell: pwsh
+        run: |
+          $out = "Studium-Windows-${{ matrix.arch }}-Portable"
+          $check = Join-Path $env:RUNNER_TEMP "Studium-check-${{ matrix.arch }}"
+          Expand-Archive -Path "$out.zip" -DestinationPath $check -Force
+          $exe = Join-Path $check "Studium.exe"
+          if (!(Test-Path $exe)) { throw "Portable ZIP has no Studium.exe" }
+          $bytes = [IO.File]::ReadAllBytes($exe)
+          $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+          if ([BitConverter]::ToUInt32($bytes, $peOffset) -ne 0x00004550) { throw "Invalid PE signature in ZIP" }
+          $subsystem = [BitConverter]::ToUInt16($bytes, $peOffset + 24 + 68)
+          if ($subsystem -ne 2) { throw "Portable ZIP executable is console subsystem ($subsystem)" }
+          Write-Host "Portable ZIP GUI subsystem verified: $subsystem"
       - name: Subir paquete
         uses: actions/upload-artifact@v4
         with:
