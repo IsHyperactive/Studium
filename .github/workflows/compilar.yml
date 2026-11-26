@@ -315,19 +315,3 @@ jobs:
           expected_sorted="$(jq -r '.[]' <<< "$expected" | sort)"
           diff -u <(printf '%s\n' "$expected_sorted") <(printf '%s\n' "$actual")
           echo "La release contiene exclusivamente los 6 paquetes portables y 2 archivos de verificación."
-      - name: Eliminar releases y tags antiguos (solo tras verificación)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          keep_tag="v0.1.1"
-          old_releases="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/releases" --jq ".[] | select(.tag_name != \"${keep_tag}\") | .id")"
-          while IFS= read -r release_id; do
-            [ -z "$release_id" ] && continue
-            gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${release_id}"
-          done <<< "$old_releases"
-          old_tags="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/tags" --jq ".[] | select(.name != \"${keep_tag}\") | .name")"
-          while IFS= read -r tag; do
-            [ -z "$tag" ] && continue
-            gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/${tag}"
-          done <<< "$old_tags"
