@@ -1,6 +1,6 @@
 export type AISettings={provider:'ollama'|'openai'|'custom',baseUrl:string,model:string,temperature:number};
 export type AIMessage={role:'user'|'assistant',content:string,created:number,sources?:string[]};
-export const defaultAI:AISettings={provider:'ollama',baseUrl:'http://localhost:11434/v1',model:'qwen2.5:7b',temperature:.25};
+export const defaultAI:AISettings={provider:'ollama',baseUrl:'http://localhost:11434/v1',model:'qwen2.5:3b',temperature:.25};
 import {buildKnowledgeContext} from './knowledge-base.ts';
 export {retrieveKnowledge,STUDIUM_KNOWLEDGE} from './knowledge-base.ts';
 const STOP=new Set('para como porque cuando donde sobre entre desde hasta tambien puede pueden cada otra otro todos todas dicho sera hace hacer tener mas menos muy todo nada algo que quien cual la el las los del una uno unos unas por con sin son fue ser tiene y o a en se al lo su sus mi tu es esta este estos esas esos what with from this that those which their there then also more most have has had into during about after before while where when who whom whose how why and or as it is are be been being'.split(/\s+/));
