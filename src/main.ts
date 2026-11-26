@@ -161,15 +161,17 @@ async function enhancePlanWithAI(local:GeneratedStudy,minutes:number,depth:'stan
  };
  await Promise.all([worker(),worker()]);
  const lessons=chunks.map(x=>results.get(x.id)).filter((x):x is AIDeepLesson&{cards:{front:string,back:string,evidence:string}[],warnings:string[]}=>Boolean(x));
- if(lessons.length<2)throw Error('El modelo no pudo producir lecciones con profundidad suficiente. Prueba un modelo más capaz o revisa la conexión.');
+ if(!lessons.length)throw Error('El modelo no pudo producir ninguna lección con profundidad suficiente. Prueba un modelo más capaz o revisa la conexión.');
  const lessonWarnings=lessons.flatMap(x=>x.warnings||[]);
  const cards=lessons.flatMap(x=>x.cards).map(x=>({front:x.front,back:x.back}));
  const questions=lessons.flatMap(x=>x.questions.map(q=>q.question));
- const outline=chunks.map((x,i)=>i+1+'. '+x.title);
+ const fallbackPlans=chunks.filter(x=>!results.has(x.id)).map(chunk=>{try{return {chunk,plan:createLocalStudyPlan(local.name,local.subject,chunk.content,minutes)};}catch(err){mapWarning.push('No se pudo generar respaldo local para '+chunk.id+': '+String(err));return null;}}).filter((x):x is {chunk:AISourceChunk,plan:GeneratedStudy}=>Boolean(x));
+ const outline=chunks.map((x,i)=>(i+1)+'. '+(results.has(x.id)?'[IA] ':'[Local] ')+x.title);
  const summary=map.overview||local.summary;
- const method=formatAIPlanMethod(map,lessons,minutes);
- const coverageWarning=lessons.length<chunks.length?'La IA no pudo desarrollar '+(chunks.length-lessons.length)+' segmento(s); se omitieron del plan profundo. Revisa la cobertura.':'Cobertura IA: '+lessons.length+'/'+chunks.length+' segmentos fuente desarrollados.';
- return {...local,summary,outline,terms:local.terms,questions:questions.length?questions:local.questions,cards:cards.length?cards:local.cards,method,sessionCount:lessons.length,aiUsed:true,warnings:[...(local.warnings||[]),...mapWarning,...lessonWarnings,coverageWarning,'Análisis en varias etapas: mapa del libro y lecciones por fragmento secuencial. Las citas verificadas son literales; no se garantiza que la IA cubra cada detalle. Profundidad seleccionada: '+depth+'.']};
+ const method=formatAIPlanMethod(map,lessons,minutes)+(fallbackPlans.length?'\n\nLECCIONES DE RESPALDO LOCAL (heurísticas, no IA):\n'+fallbackPlans.map(x=>x.plan.method).join('\n\n'):'');
+ const fallbackCount=fallbackPlans.reduce((n,x)=>n+(x.plan.sessionCount||0),0);
+ const coverageWarning=lessons.length===chunks.length?'Cobertura IA: '+lessons.length+'/'+chunks.length+' segmentos fuente desarrollados.': 'Cobertura combinada: IA '+lessons.length+'/'+chunks.length+' segmentos; los restantes se conservaron como guía local heurística, no se omitieron.';
+ return {...local,summary,outline,terms:local.terms,questions:[...questions,...fallbackPlans.flatMap(x=>x.plan.questions)].slice(0,80),cards:[...cards,...fallbackPlans.flatMap(x=>x.plan.cards)],method,sessionCount:lessons.length+fallbackCount,aiUsed:true,warnings:[...(local.warnings||[]),...mapWarning,...lessonWarnings,...fallbackPlans.flatMap(x=>x.plan.warnings||[]),coverageWarning,'Análisis en varias etapas: mapa del libro y lecciones por fragmento secuencial. Las citas verificadas son literales; no se garantiza que la IA cubra cada detalle. Profundidad seleccionada: '+depth+'.']};
 }
 async function generateStudyFromFile(e:Event){e.preventDefault();const file=document.querySelector<HTMLInputElement>('#study-file')?.files?.[0];if(!file)return;const btn=document.querySelector<HTMLButtonElement>('#generate-study');if(btn){btn.disabled=true;btn.textContent='Analizando archivo…';}try{const minutes=Number(document.querySelector<HTMLSelectElement>('#study-minutes')?.value||30),text=await extractFileText(file);generatedStudy=buildStudy(file.name,(document.querySelector<HTMLInputElement>('#study-subject')?.value||'').trim(),text,minutes);if(document.querySelector<HTMLInputElement>('#study-ai')?.checked){try{const depth=(document.querySelector<HTMLSelectElement>('#study-depth')?.value||'deep') as 'standard'|'deep'|'very-deep';generatedStudy=await enhancePlanWithAI(generatedStudy,minutes,depth,s=>{if(btn)btn.textContent=s;});}catch(err){generatedStudy.warnings=[...(generatedStudy.warnings||[]),'La ampliación IA no pudo completarse: '+String(err),'Se conserva el plan heurístico local; no se presenta como IA.'];}}showStudyPreview(generatedStudy);}catch(err){alert('No se pudo analizar: '+String(err));}finally{if(btn){btn.disabled=false;btn.textContent='Crear método de estudio';}}}
 function studyMethodPreview(method:string){
