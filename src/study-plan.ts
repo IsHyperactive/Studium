@@ -70,7 +70,7 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
  const terms=extractTerms(sections,24),rawWords=wc(raw),duration=Math.max(20,Math.min(60,Math.round(minutes||30)));
  const desired=Math.min(24,Math.max(2,Math.ceil(rawWords/350),Math.min(sections.length,24))),topics=adjust(sections,desired),sessionCount=topics.length;
  const sumParts=sections.map(s=>{const sentence=distinct(sentences(s.body),extractTerms([s],5),1)[0];return sentence?s.title+': '+sentence:''}).filter(Boolean);
- const summary=[...sumParts,...distinct(all,terms,4)].filter((s,i,a)=>a.findIndex(x=>norm(x)===norm(s))===i).slice(0,8).join(' ').slice(0,2200);
+ const summary=[...sumParts,...distinct(all,terms,4)].filter((s,i,a)=>a.findIndex(x=>norm(x)===norm(s))===i).slice(0,24).join(' ').slice(0,5000);
  const outline=topics.map(s=>s.title).filter((x,i,a)=>a.findIndex(y=>norm(y)===norm(x))===i).slice(0,24);
  const cards:{front:string,back:string}[]=[];
  for(const term of terms){
