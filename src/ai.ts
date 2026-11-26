@@ -9,17 +9,14 @@ export function parseAIStudyPlan(raw:string,source:string):AIStudyPlan{
  const start=text.indexOf('{'),end=text.lastIndexOf('}');if(start<0||end<=start)throw new Error('La IA no devolvió JSON válido para el plan.');
  let data:Record<string,unknown>;try{data=JSON.parse(text.slice(start,end+1));}catch{throw new Error('El plan de IA llegó con JSON mal formado.');}
  const sourceText=sourceNorm(source);
- const lessons=(Array.isArray(data.lessons)?data.lessons:[]).slice(0,24).map((x:any)=>({
-  title:typeof x?.title==='string'?x.title.trim():'',
-  objective:typeof x?.objective==='string'?x.objective.trim():'',
-  explanation:typeof x?.explanation==='string'?x.explanation.trim():'',
-  evidence:cleanList(x?.evidence,4).filter(q=>sourceText.includes(sourceNorm(q))),
-  activities:cleanList(x?.activities,6),
-  questions:cleanList(x?.questions,8),
-  checkpoint:typeof x?.checkpoint==='string'?x.checkpoint.trim():''
- })).filter(x=>x.title&&x.objective&&x.explanation);
+ let invalidEvidenceCount=0;
+ const lessons=(Array.isArray(data.lessons)?data.lessons:[]).slice(0,24).map((x:any)=>{
+  const rawEvidence=cleanList(x?.evidence,4),evidence=rawEvidence.filter(q=>sourceText.includes(sourceNorm(q)));if(evidence.length<rawEvidence.length)invalidEvidenceCount++;
+  return {title:typeof x?.title==='string'?x.title.trim():'',objective:typeof x?.objective==='string'?x.objective.trim():'',explanation:typeof x?.explanation==='string'?x.explanation.trim():'',evidence,activities:cleanList(x?.activities,6),questions:cleanList(x?.questions,8),checkpoint:typeof x?.checkpoint==='string'?x.checkpoint.trim():''};
+ }).filter(x=>x.title&&x.objective&&x.explanation);
  if(lessons.length<2)throw new Error('La IA no creó suficientes lecciones completas.');
  const warnings:string[]=[];
+ if(invalidEvidenceCount)warnings.push('Se descartaron citas que no coinciden literalmente con los extractos enviados; verifica las afirmaciones que quedaron sin evidencia.');
  if(lessons.some(x=>!x.evidence.length))warnings.push('Algunas lecciones no contienen citas exactas verificables en el texto enviado; revisa su contenido.');
  const cards=(Array.isArray(data.cards)?data.cards:[]).map((x:any)=>({front:typeof x?.front==='string'?x.front.trim():'',back:typeof x?.back==='string'?x.back.trim():'',evidence:typeof x?.evidence==='string'?x.evidence.trim():''})).filter(x=>x.front&&x.back&&x.evidence&&sourceText.includes(sourceNorm(x.evidence))).slice(0,40);
  if(Array.isArray(data.cards)&&data.cards.length&&!cards.length)warnings.push('Las tarjetas propuestas no incluyen evidencia literal comprobable; se conservarán las tarjetas locales.');
