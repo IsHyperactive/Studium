@@ -18,10 +18,12 @@ PRINCIPIOS:
 - Responde en español por defecto, salvo que el usuario esté practicando otro idioma.
 FORMATO: respuestas claras y útiles, encabezados solo cuando aporten; evita largos bloques, listas excesivas y frases vacías. Si es tutoría, termina con una pregunta o ejercicio concreto para comprobar aprendizaje.
 `;
+const retrievalStop=new Set('para como que con por una uno unos unas los las del desde entre sobre esta este estos esas cuando donde porque pero también más muy sin sus son fue ser tiene hacer pueden cada todo todos quien cual qué cómo and the for with this that from into your about are was has have not can'.split(' '));
+function normalizeTerms(text:string){return text.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').match(/[a-z0-9]{3,}/g)||[];}
 export function rankContext(query:string,materials:{title:string,subject:string,content:string}[],limit=5){
- const terms=(query.toLowerCase().match(/[a-záéíóúüñ0-9]{3,}/g)||[]).filter(x=>!['para','como','que','con','por','una','the','and','you','los','las','del'].includes(x));
- const scored=materials.map(m=>{const text=(m.title+' '+m.subject+' '+m.content).toLowerCase();const score=terms.reduce((n,t)=>n+(text.split(t).length-1)*(m.title.toLowerCase().includes(t)?4:1),0);let best=0,bestAt=0;const size=1700;for(let i=0;i<text.length;i+=850){const part=text.slice(i,i+size);const value=terms.reduce((n,t)=>n+(part.split(t).length-1),0);if(value>best){best=value;bestAt=i;}}return {m,score,bestAt};}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,limit);
- return scored.map(({m,bestAt})=>({title:m.title,subject:m.subject,excerpt:m.content.slice(Math.max(0,bestAt-100),Math.min(m.content.length,bestAt+1700))}));
+ const terms=[...new Set(normalizeTerms(query).filter(t=>!retrievalStop.has(t)))];if(!terms.length)return [];
+ const scored=materials.map(m=>{const title=normalizeTerms(m.title),subject=normalizeTerms(m.subject);let bestScore=0,bestAt=0;const size=1400,step=1000;for(let at=0;at<m.content.length;at+=step){const chunk=m.content.slice(at,at+size),tokens=normalizeTerms(chunk);let score=0;for(const term of terms){const count=tokens.filter(x=>x===term).length;if(count)score+=Math.min(count,5);if(title.includes(term))score+=5;if(subject.includes(term))score+=3;}if(score>bestScore){bestScore=score;bestAt=at;}}let total=0;const all=normalizeTerms(m.content);for(const t of terms)total+=all.filter(x=>x===t).length;return {m,score:bestScore+Math.min(total,12)*.15,bestAt};}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,limit);
+ return scored.map(({m,bestAt})=>({title:m.title,subject:m.subject,excerpt:m.content.slice(Math.max(0,bestAt-80),Math.min(m.content.length,bestAt+1400))}));
 }
 export async function requestAI(settings:AISettings,key:string,messages:{role:'system'|'user'|'assistant',content:string}[],signal?:AbortSignal){
  const base=settings.baseUrl.trim().replace(/\/$/,'');if(!base)throw new Error('Configura la URL del servicio IA.');
