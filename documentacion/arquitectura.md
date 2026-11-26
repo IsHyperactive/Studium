@@ -18,16 +18,16 @@ MVP local-first de escritorio, distribuido en una sola release portable. No tien
 - Respaldo JSON importar/exportar y borrado de datos.
 - Lectura de PDF con texto, EPUB, DOCX, TXT y Markdown.
 - Tutor IA opcional (API compatible con Chat Completions): instrucciones pedagógicas internas, contexto recuperado desde biblioteca y títulos de fuente visibles.
-- Guías de estudio generadas por IA con validación de campos y fallback local.
+- Guías de estudio generadas por IA con validación de campos, sesiones/duración comprobadas y fallback local.\n- Historial de chats separado, abrir/eliminar conversaciones y guardar hasta 30 conversaciones.\n- Quiz interactivo: preguntas secuenciales, evaluación de 0–2, feedback, corrección y ajuste de dificultad.
 
 ## IA: diseño y privacidad
-- `src/ai.ts` contiene el núcleo de tutoría, protocolos pedagógicos, recuperación de fragmentos y cliente HTTP.
+- `src/ai.ts` contiene el núcleo de tutoría, protocolos pedagógicos, recuperación de fragmentos, cliente HTTP y validadores de quiz/guía.\n- `src/study-plan.ts` contiene el generador heurístico local y plan por sesiones.
 - La base pedagógica es texto de instrucciones curado, no un dataset de entrenamiento ni pesos de modelo entrenados.
 - El modelo se ejecuta en el proveedor que el usuario configura. Ollama permite ejecución local si el usuario instala y descarga un modelo compatible; proveedores remotos reciben los prompts y fragmentos enviados.
 - La API key no se escribe en el almacenamiento local; permanece en memoria durante la sesión. URL, modelo y temperatura sí se guardan localmente.
 - El contenido de documentos se trata como datos y las instrucciones incrustadas se ignoran; no se garantiza protección completa frente a prompt injection.
 - Respuestas generadas no son verificación factual; el tutor debe declarar incertidumbre y usar títulos de fuentes, sin inventar páginas.
-- El frontend tiene timeout de 90 segundos y validación de la estructura del plan. La generación puede fallar con modelos pequeños o contextos insuficientes.
+- El frontend tiene timeout de 90 segundos, botón para cancelar chat y validación de la estructura del plan; verifica que el método incluya al menos 3 sesiones y la duración seleccionada. La generación puede fallar con modelos pequeños o contextos insuficientes.\n- La evaluación del quiz depende del modelo y puede equivocarse; los resultados son formativos, no una medición certificada del dominio.
 
 ## Almacenamiento portable
 La shell Rust expone `load_portable_data`, `save_portable_data` y `portable_data_path`. El archivo se crea junto al ejecutable; AppImage usa la ruta del archivo AppImage y macOS coloca los datos junto al bundle `.app`. Mantén `Studium-data.json` con la aplicación al mover/copiar la carpeta. La carpeta requiere permisos de escritura.
@@ -50,4 +50,4 @@ No se publican NSIS, DEB, DMG, APK ni versiones redundantes. Cada build exitoso 
 - `.github/workflows/compilar.yml`: CI y publicación unificada.
 
 ## Limitaciones conocidas
-No hay OCR, exámenes adaptativos completos, audio, lápiz, gestos, sync, cifrado ni pruebas automatizadas de flujos. El tutor depende de un proveedor/modelo configurado; no incluye modelo integrado ni fine-tuning. El ranking de biblioteca es heurístico, no búsqueda semántica vectorial. Las funciones actuales necesitan pruebas en hardware y revisión de accesibilidad.
+No hay OCR, exámenes completos con historial de dominio, audio, lápiz, gestos, sync, cifrado ni pruebas automatizadas de flujos de UI/almacenamiento. El quiz ajusta dificultad dentro de una sesión, no de forma longitudinal. El tutor depende de un proveedor/modelo configurado; no incluye modelo integrado ni fine-tuning. El ranking de biblioteca es heurístico, no búsqueda semántica vectorial. Las funciones actuales necesitan pruebas en hardware y revisión de accesibilidad.
