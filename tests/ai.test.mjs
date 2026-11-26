@@ -8,7 +8,12 @@ const docs=[
  {title:'Historia',subject:'Sociales',content:'La Revolución Industrial transformó la producción, las ciudades y las relaciones laborales. Las máquinas aumentaron la capacidad de fabricación.'},
  {title:'Matemáticas',subject:'Álgebra',content:'Las ecuaciones lineales permiten encontrar una incógnita. Se despeja la variable con operaciones inversas y se comprueba sustituyendo el resultado.'}
 ];
-test('normaliza títulos de conversaciones y recorta longitud',()=>{\n assert.equal(conversationTitle('  Hola\\n\\n  Studium   IA  '),'Hola Studium IA');\n assert.equal(conversationTitle('  '),'Nueva conversación');\n assert.equal(conversationTitle('a'.repeat(60)).length,48);\n});\ntest('normaliza tildes sin eliminar letras de los términos',()=>{
+test('normaliza títulos de conversaciones y recorta longitud',()=>{
+ assert.equal(conversationTitle('  Hola\n\n  Studium   IA  '),'Hola Studium IA');
+ assert.equal(conversationTitle('  '),'Nueva conversación');
+ assert.equal(conversationTitle('a'.repeat(60)).length,48);
+});
+test('normaliza tildes sin eliminar letras de los términos',()=>{
  assert.deepEqual(normalizeTerms('Revolución, biología y ecuación'),['revolucion','biologia','ecuacion']);
 });
 test('ranking prioriza la fuente más relacionada y su fragmento',()=>{
