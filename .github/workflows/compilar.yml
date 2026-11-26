@@ -63,6 +63,9 @@ jobs:
           $bytes = [IO.File]::ReadAllBytes($exe)
           $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
           if ([BitConverter]::ToUInt32($bytes, $peOffset) -ne 0x00004550) { throw "Invalid PE signature" }
+          $machine = [BitConverter]::ToUInt16($bytes, $peOffset + 4)
+          $expectedMachine = if ('${{ matrix.arch }}' -eq 'x64') { 0x8664 } else { 0xAA64 }
+          if ($machine -ne $expectedMachine) { throw "Wrong PE architecture: $machine; expected $expectedMachine" }
           $subsystem = [BitConverter]::ToUInt16($bytes, $peOffset + 24 + 68)
           if ($subsystem -ne 2) { throw "Debug build must use GUI subsystem (2), got $subsystem" }
           Write-Host "Verified debug Windows GUI subsystem: $subsystem"
@@ -267,11 +270,11 @@ jobs:
             echo "- **Respaldo:** exporta e importa tus datos en JSON."
             echo
             echo "## Firma de Windows"
-            echo "La firma Authenticode es opcional en CI y requiere un certificado de firma de código configurado como GitHub Secrets. Sin certificado, los ZIP de Windows contienen ejecutables sin firmar; SmartScreen puede advertir."
+            echo "La firma Authenticode es opcional en CI y requiere un certificado de firma de código configurado como GitHub Secrets. Sin certificado, los EXE directos de Windows quedan sin firmar; SmartScreen puede advertir."
             echo
             echo "## Qué hace Studium"
             echo "- Importa PDF, EPUB, DOCX, TXT y Markdown y extrae texto en el dispositivo."
-            echo "- Genera resumen, esquema, conceptos clave, preguntas y un plan de estudio local heurístico (no IA)."
+            echo "- Genera resumen, esquema, conceptos clave, preguntas y un plan local heurístico (no IA) con evidencia, objetivos medibles, práctica activa y repaso."
             echo "- Crea tarjetas de repaso automáticamente y guarda una guía en la Biblioteca."
             echo "- El plan local usa estructura, términos y fragmentos del archivo para sesiones progresivas, recuperación activa, práctica, checkpoints y repaso espaciado. No es IA ni entrenamiento de modelos. Los PDF escaneados requieren OCR, que aún no está incluido."
             echo
@@ -349,7 +352,7 @@ jobs:
           for name in "Studium-Windows-x64.exe" "Studium-Windows-arm64.exe"; do
             test -s "${name}"
             file "${name}" | grep -q PE32
-            python3 -c 'import struct,sys; d=open(sys.argv[1],"rb").read(); p=struct.unpack_from("<I",d,0x3c)[0]; assert d[p:p+4]==b"PE\\0\\0"; assert struct.unpack_from("<H",d,p+24+68)[0]==2, "GUI subsystem not set"' "${name}"
+            python3 -c 'import struct,sys; d=open(sys.argv[1],"rb").read(); p=struct.unpack_from("<I",d,0x3c)[0]; assert d[p:p+4]==b"PE\\0\\0"; machine=struct.unpack_from("<H",d,p+4)[0]; expected={"Studium-Windows-x64.exe":0x8664,"Studium-Windows-arm64.exe":0xAA64}[sys.argv[1]]; assert machine==expected, "wrong PE architecture"; assert struct.unpack_from("<H",d,p+24+68)[0]==2, "GUI subsystem not set"' "${name}"
           done
           for name in "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage"; do
             test -s "${name}"

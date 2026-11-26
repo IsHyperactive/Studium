@@ -1,67 +1,53 @@
-# <img src="recursos/icono.svg" width="56" align="left" alt="Icono de Studium" /> Studium
+# Studium
 
-<p align="center"><img src="recursos/icono.svg" width="160" alt="Studium: libro abierto con una chispa" /></p>
+Studium es una aplicación de escritorio local-first para organizar el aprendizaje. Sin cuentas ni sincronización obligatoria; los paquetes portables conservan sus datos junto a la aplicación.
 
-<p align="center"><strong>Tu espacio portable para organizar el aprendizaje.</strong><br/>Biblioteca · Notas · Tarjetas · Sesiones de enfoque · Seguimiento</p>
+## Crear una guía desde un archivo
 
-Studium es un espacio local-first para organizar el aprendizaje. Sin cuentas, sin sincronización obligatoria y con una distribución **portable**: extrae/abre el paquete y conserva el archivo de datos junto a la aplicación.
+- Importa PDF, EPUB, DOCX, TXT y Markdown; la extracción se realiza en el dispositivo.
+- Genera un resumen diverso, esquema, conceptos clave, preguntas y tarjetas vinculadas a fragmentos del archivo.
+- El plan local organiza entre 2 y 5 sesiones según extensión/estructura, con objetivos observables, bloques de tiempo, recuperación activa, práctica, checkpoints, registro de errores y repasos espaciados.
+- Utiliza un corpus pedagógico local para orientar el plan. No es IA y no modifica pesos de modelos; el tutor IA todavía no está conectado a la interfaz.
+- Los PDF escaneados requieren OCR, aún no incluido. Revisa los fragmentos y el plan: las heurísticas pueden omitir o interpretar mal texto extraído.
 
-## Función principal: crear método desde un archivo
-- Importa PDF, EPUB, DOCX, TXT y Markdown.
-- Extrae texto localmente y genera un resumen, esquema, conceptos clave, preguntas de práctica y un plan de estudio.
-- Crea tarjetas de recuerdo automáticamente y las añade a Repaso.
-- Guarda la guía y el material importado en Biblioteca.
-- Los PDF escaneados requieren OCR; todavía no está incluido.
+## Funciones
 
-## Funciones disponibles
-- Biblioteca: crear, editar, eliminar y buscar materiales; filtrar por materia; guardar apuntes, libros, enlaces y recursos.
-- Notas: editor de texto sencillo.
-- Repaso: tarjetas pregunta/respuesta con intervalos básicos.
-- Sesiones: temporizador de 15, 25, 45 y 60 minutos, pausa, reinicio, registro manual y registro al terminar.
-- Progreso: minutos diarios, objetivo, materiales, tarjetas pendientes y materias.
-- Respaldo: exportar/importar JSON y borrar los datos locales.
+- Biblioteca: crear, editar, eliminar, buscar y filtrar materiales por materia.
+- Notas y enlaces.
+- Tarjetas pregunta/respuesta y repaso por intervalos básicos.
+- Temporizador de enfoque, pausa, reinicio y registro.
+- Progreso y meta diaria.
+- Respaldo JSON exportar/importar y borrar datos locales.
 
-**Base pedagógica:** Studium incluye un corpus educativo propio inicial y recuperación de conceptos para orientar el tutor y el método de estudio. No entrena los pesos de un modelo ni significa que el chat IA ya esté integrado en la interfaz.\n\n**Limitaciones:** el método se genera con heurísticas locales; el tutor IA todavía no está conectado a la interfaz. No hay OCR para documentos escaneados, exámenes interactivos, audio, anotaciones con lápiz, sincronización ni cuentas. Es un MVP; algunas funciones necesitan pruebas en dispositivos reales.
+## Descargas portables
 
-## Distribución portable única
-Cada compilación reemplaza la release anterior. No se publican instaladores, DEB, DMG, APK ni archivos duplicados.
+Una única release oficial:
 
-| Plataforma | Arquitectura | Formato |
+| Sistema | Arquitectura | Formato |
 |---|---|---|
-| Windows | x64 | ZIP portable |
-| Windows | ARM64 | ZIP portable |
+| Windows | x64 | EXE directo |
+| Windows | ARM64 | EXE directo |
 | Linux | x64 | AppImage |
 | Linux | ARM64 | AppImage |
-| macOS | Intel x64 | ZIP con .app |
-| macOS | Apple Silicon ARM64 | ZIP con .app |
+| macOS | Intel x64 | ZIP con app |
+| macOS | Apple Silicon ARM64 | ZIP con app |
 
-[**Descargar la única release portable**](https://github.com/IsHyperactive/Studium/releases)
+[Descargar Studium](https://github.com/IsHyperactive/Studium/releases)
+
+Windows necesita WebView2 Runtime. Los EXE no están firmados si no se configura el certificado de Authenticode en GitHub Secrets. Linux puede requerir FUSE 2. macOS no está firmado ni notarizado.
 
 ## Datos y portabilidad
-En la app de escritorio, Studium crea `Studium-data.json` en la carpeta portable junto al ejecutable (en macOS, junto al `.app`). Mantén ese archivo con la app al moverla. También puedes exportar un respaldo desde Ajustes.
 
-- Windows: necesita WebView2 Runtime. La firma Authenticode se activa si se configuran `WINDOWS_SIGNING_CERT_BASE64` y `WINDOWS_SIGNING_CERT_PASSWORD` en GitHub Secrets. Sin certificado, el ejecutable sigue sin firma y SmartScreen puede mostrar avisos; una firma válida tampoco garantiza eliminar advertencias de reputación.
-- Linux AppImage: puede requerir FUSE 2.
-- macOS: paquete sin firma/notarización; Gatekeeper puede mostrar una advertencia.
-- La carpeta debe permitir escritura. No ejecutes la portable desde una carpeta de solo lectura.
+En escritorio se guarda Studium-data.json junto al ejecutable o bundle. Mantén el archivo de datos con la app al moverla. La versión web de desarrollo usa localStorage.
 
-La versión web de desarrollo usa el almacenamiento local del navegador.
+## CI y desarrollo
 
-## CI y releases
-[Releases](https://github.com/IsHyperactive/Studium/releases) · [Actions](https://github.com/IsHyperactive/Studium/actions)
+Actions verifica TypeScript, pruebas del plan local y frontend. La release incluye notas, commit, workflow y SHA-256.
 
-Las compilaciones verifican TypeScript y el frontend antes de empaquetar. La publicación contiene inventario, notas, commit, enlace de workflow y SHA-256.
-
-## Desarrollo
 Requisitos: Node, npm, Rust y prerrequisitos Tauri.
 
-```sh
-npm install
-npm run typecheck
-npm run build
-npm run tauri dev
-```
+Comandos: npm install · npm run typecheck · npm run test · npm run build · npm run tauri dev.
 
-Consulta [arquitectura](documentacion/arquitectura.md), [AGENTS](AGENTS.md) y [contribución](CONTRIBUTING.md).
+Consulta AGENTS.md y documentacion/arquitectura.md.
 
-MIT. Ver [LICENSE](LICENSE).
+MIT.
