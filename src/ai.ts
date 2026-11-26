@@ -25,7 +25,7 @@ export function parseAIStudyPlan(raw:string,source:string):AIStudyPlan{
  const questions=lessons.flatMap(x=>x.questions).filter(Boolean).slice(0,80);
  return {summary:typeof data.summary==='string'?data.summary.trim():'',outline:cleanList(data.outline,24),terms:cleanList(data.terms,40),questions:cleanList(data.questions,80).concat(questions).filter((q,i,a)=>a.findIndex(x=>x.toLowerCase()===q.toLowerCase())===i).slice(0,80),cards,lessons,warnings};
 }
-export const defaultAI:AISettings={provider:'ollama',baseUrl:'http://localhost:11434/v1',model:'qwen2.5:3b',temperature:.25};
+export const defaultAI:AISettings={provider:'ollama',baseUrl:'http://localhost:11434/v1',model:'qwen2.5:7b',temperature:.25};
 import {buildKnowledgeContext} from './knowledge-base.ts';
 export {retrieveKnowledge,STUDIUM_KNOWLEDGE} from './knowledge-base.ts';
 const STOP=new Set('para como porque cuando donde sobre entre desde hasta tambien puede pueden cada otra otro todos todas dicho sera hace hacer tener mas menos muy todo nada algo que quien cual la el las los del una uno unos unas por con sin son fue ser tiene y o a en se al lo su sus mi tu es esta este estos esas esos what with from this that those which their there then also more most have has had into during about after before while where when who whom whose how why and or as it is are be been being'.split(/\s+/));
@@ -34,8 +34,33 @@ function useful(s:string){return tokens(s).filter(x=>!STOP.has(x));}
 function splitSentences(s:string){return(s.replace(/\s+/g,' ').match(/[^.!?…]+(?:[.!?…]+|$)/g)||[]).map(x=>x.trim()).filter(x=>x.length>25);}
 function scoreText(query:string,text:string,corpusSize=1){const q=new Set(useful(query));if(!q.size)return 0;const ts=useful(text),freq=new Map<string,number>();for(const t of ts)freq.set(t,(freq.get(t)||0)+1);const total=Math.max(1,ts.length);let score=0;for(const term of q){const n=freq.get(term)||0;if(n)score+=(1+Math.log(n))*(1+Math.log(1+corpusSize));}return score/Math.sqrt(total);}
 function selectExcerpt(query:string,content:string,maxChars:number){const parts=splitSentences(content);if(!parts.length)return content.slice(0,maxChars);const scored=parts.map((s,i)=>({s,i,score:scoreText(query,s,parts.length)})).sort((a,b)=>b.score-a.score);const selected:string[]=[];let used=0;for(const x of scored){if(x.score<=0)continue;if(used+x.s.length+2>maxChars)continue;selected.push(x.s);used+=x.s.length+2;if(used>maxChars*.75)break;}if(!selected.length)return content.slice(0,maxChars);const chosen=new Set(selected);return parts.filter(s=>chosen.has(s)).join(' ').slice(0,maxChars);}
-export function rankContext(query:string,materials:{title:string,subject:string,content:string}[],limit=5){const size=Math.max(1,materials.length);return materials.map(m=>({m,score:scoreText(query,m.title+' '+m.subject+' '+m.content,size)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,limit).map(({m})=>({title:m.title,subject:m.subject,excerpt:selectExcerpt(query,m.content,6500)}));}
-export function buildMaterialContext(query:string,materials:{title:string,subject:string,content:string}[],limit=4,maxChars=10000){const ranked=rankContext(query,materials,limit);if(!ranked.length)return '';let left=maxChars;const chunks:string[]=[];for(const m of ranked){if(left<350)break;const excerpt=m.excerpt.slice(0,left);chunks.push('FUENTE: '+m.title+(m.subject?' · Materia: '+m.subject:'')+'\n'+excerpt);left-=excerpt.length;}return chunks.join('\n\n---\n\n');}
+function splitMaterialPassages(content:string,max=1400){
+ const out:{heading:string,text:string}[]=[],lines=content.split(/\r?\n/);let heading='Introducción',buf:string[]=[],size=0;
+ const emit=()=>{if(buf.length){out.push({heading,text:buf.join(' ').trim()});buf=[];size=0;}};
+ for(const line of lines){const s=line.trim();if(!s)continue;if(/^#{1,6}\s+/.test(s)||/^(cap[ií]tulo|unidad|tema|secci[oó]n|apartado)\b/i.test(s)){emit();heading=s.replace(/^#{1,6}\s*/,'');continue;}
+  const paras=s.split(/(?<=[.!?])\s+/).filter(Boolean);for(const p of paras){if(size+p.length>max&&buf.length)emit();buf.push(p);size+=p.length;}
+ }emit();if(!out.length){for(let i=0;i<content.length;i+=max)out.push({heading:'Fragmento '+(i/max+1),text:content.slice(i,i+max)});}return out;
+}
+function passageScore(query:string,heading:string,text:string){return scoreText(query,heading+' '+text,1)+scoreText(query,heading,1)*1.8;}
+function selectedPassages(query:string,content:string,maxChars:number){
+ const passages=splitMaterialPassages(content),ranked=passages.map((p,i)=>({p,i,score:passageScore(query,p.heading,p.text),terms:new Set(useful(query+' '+p.text))})).sort((a,b)=>b.score-a.score);
+ const selected:typeof ranked=[];let used=0;
+ for(const item of ranked){if(item.score<=0&&selected.length)continue;const overlap=selected.reduce((m,x)=>Math.max(m,item.terms.size?([...item.terms].filter(t=>x.terms.has(t)).length/item.terms.size):0),0);if(overlap>.78)continue;
+  const piece='SECCIÓN: '+item.p.heading+'\n'+item.p.text;if(used+piece.length>maxChars)continue;selected.push(item);used+=piece.length;if(used>=maxChars*.82||selected.length>=5)break;
+ }
+ if(!selected.length&&passages.length)selected.push({p:passages[0],i:0,score:0,terms:new Set()});
+ return selected.sort((a,b)=>a.i-b.i).map(x=>'SECCIÓN: '+x.p.heading+'\n'+x.p.text).join('\n\n[... fragmentos no contiguos ...]\n\n').slice(0,maxChars);
+}
+export function rankContext(query:string,materials:{title:string,subject:string,content:string}[],limit=5){
+ const size=Math.max(1,materials.length);
+ return materials.map(m=>({m,score:scoreText(query,m.title+' '+m.subject,size)*2.2+scoreText(query,m.content,size)})).sort((a,b)=>b.score-a.score).slice(0,limit).map(({m})=>({title:m.title,subject:m.subject,excerpt:selectedPassages(query,m.content,6500)}));
+}
+export function buildMaterialContext(query:string,materials:{title:string,subject:string,content:string}[],limit=4,maxChars=15000){
+ const ranked=rankContext(query,materials,limit);if(!ranked.length)return '';
+ let left=maxChars;const chunks:string[]=[];
+ for(const m of ranked){if(left<350)break;const excerpt=m.excerpt.slice(0,left);chunks.push('FUENTE: '+m.title+(m.subject?' · Materia: '+m.subject:'')+'\n'+excerpt);left-=excerpt.length;}
+ return chunks.join('\n\n---\n\n');
+}
 export const STUDIUM_LEARNING_CORE=`
 IDENTIDAD: Eres el Profesor de Studium, tutor de aprendizaje paciente, riguroso, cálido y directo. Ayudas a aprender y razonar, no a copiar.
 MÉTODO DE ENSEÑANZA:
