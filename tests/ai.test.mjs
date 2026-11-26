@@ -35,7 +35,7 @@ test('no incluye documentos sin contenido',()=>{
 });
 const validGuide={summary:'Este resumen contiene suficiente contenido para explicar el tema con claridad y una visión general.',outline:['Concepto principal','Aplicación y ejemplos'],terms:['concepto','aplicación'],cards:[{front:'¿Qué es?',back:'Una explicación con sentido.'}],questions:['Define el concepto','Explica la relación','Aplica a un ejemplo'],method:'Primero recuerda los conceptos sin consultar. Luego estudia la sección, explica con tus palabras, resuelve una práctica y corrige errores. Repite el recuerdo mañana y en varios días.'};
 test('parsea JSON rodeado de texto y un bloque markdown',()=>{
- const parsed=parseStudyResponse('Respuesta:\n```json\n'+JSON.stringify(validGuide)+'\n```\nFin.');
+ const parsed=parseStudyResponse('Respuesta:\n'+String.fromCharCode(96).repeat(3)+'json\n'+JSON.stringify(validGuide)+'\n'+String.fromCharCode(96).repeat(3)+'\nFin.');
  assert.equal(parsed.summary,validGuide.summary);
  assert.equal(parsed.cards.length,1);
 });
@@ -50,20 +50,21 @@ test('limita conceptos, tarjetas y preguntas',()=>{
  assert.equal(parsed.cards.length,12);
  assert.equal(parsed.questions.length,10);
 });
-
 test('el plan local es específico al material y respeta la duración',()=>{
  const source='La fotosíntesis convierte energía luminosa en energía química. La clorofila absorbe la luz y se encuentra en los cloroplastos. Durante el proceso se utiliza dióxido de carbono y agua para producir azúcares. El oxígeno se libera como resultado de las reacciones. La energía química queda almacenada en moléculas orgánicas. Las plantas usan esos compuestos para crecer y mantener sus funciones.';
  const plan=createLocalStudyPlan('Biología.txt','Biología',source,25);
  assert.match(plan.summary,/fotosíntesis|clorofila/i);
  assert.ok(plan.cards.length>=2);
- assert.match(plan.method,/25 min/);\n assert.ok((plan.method.match(/Sesión \\d+/g)||[]).length>=3);\n assert.ok(plan.method.split('Sesión ').slice(1).every(s=>s.startsWith('\\d+ (25 min)')));
+ assert.match(plan.method,/25 min/);
+ const sessions=plan.method.split('\n').filter(s=>s.startsWith('Sesión'));
+ assert.ok(sessions.length>=3);
+ assert.ok(sessions.every(s=>s.includes('(25 min)')));
  assert.match(plan.method,/día 1/i);
  assert.ok(plan.questions.length>=3);
 });
 test('planificador local rechaza textos insuficientes',()=>{
  assert.throws(()=>createLocalStudyPlan('vacío','', 'solo palabras'),/poco texto/);
 });
-
 test('valida estructura de quiz y normaliza dificultad',()=>{
  const raw=JSON.stringify({questions:[
  {question:'Define un concepto clave',answer:'Definición válida',explanation:'Explicación con fundamento',difficulty:'basic'},
@@ -77,13 +78,13 @@ test('rechaza quiz incompleto y evalúa solo puntuación permitida',()=>{
  assert.equal(grade.score,2);
  assert.throws(()=>parseQuizGrade(JSON.stringify({score:4,feedback:'x',correction:'y'})),/Puntuación inválida/);
 });
-
 test('parsea quizzes dentro de fences markdown',()=>{
  const data={questions:[
  {question:'Pregunta uno con contexto',answer:'Respuesta uno',explanation:'Explicación uno',difficulty:'basic'},
  {question:'Pregunta dos con contexto',answer:'Respuesta dos',explanation:'Explicación dos',difficulty:'intermediate'},
  {question:'Pregunta tres con contexto',answer:'Respuesta tres',explanation:'Explicación tres',difficulty:'advanced'}]};
- const result=parseQuizResponse('\\`\\`\\`json\\n'+JSON.stringify(data)+'\\n\\`\\`\\`');
+ const fence=String.fromCharCode(96).repeat(3);
+ const result=parseQuizResponse(fence+'json\n'+JSON.stringify(data)+'\n'+fence);
  assert.equal(result.length,3);
  assert.equal(result[2].difficulty,'advanced');
 });
