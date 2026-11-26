@@ -17,18 +17,18 @@ permissions:
 jobs:
   cancelar_obsoletas:
     name: Cancelar builds anteriores
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     permissions:
       actions: write
     steps:
       - name: Cancelar otros runs de compilación
+        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           CURRENT_RUN: ${{ github.run_id }}
         run: |
           set -euo pipefail
-          stale_runs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?per_page=100" --jq ".workflow_runs[] | select(.id != ${CURRENT_RUN} and .path == \".github/workflows/compilar.yml\" and .status != \"completed\") | .id")"
+          stale_runs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs?per_page=100" --jq ".workflow_runs[] | select(.id != ${CURRENT_RUN} and .path == \".github/workflows/compilar.yml\" and .head_branch == "main" and .status != \"completed\") | .id")"
           while IFS= read -r run_id; do
             [ -z "$run_id" ] && continue
             gh api --silent -X POST "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/cancel" || true
@@ -188,7 +188,6 @@ jobs:
   release:
     name: Unificar publicación portable
     needs: [windows, linux, macos]
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
