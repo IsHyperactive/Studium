@@ -122,11 +122,15 @@ jobs:
           $subsystem = [BitConverter]::ToUInt16($bytes, $peOffset + 24 + 68)
           if ($subsystem -ne 2) { throw "Executable is console subsystem ($subsystem)" }
           Write-Host "Direct GUI executable verified: $subsystem"
+      - name: Preparar asset con arquitectura en el nombre
+        shell: pwsh
+        run: |
+          Copy-Item "Studium-Windows-${{ matrix.arch }}-Portable/Studium.exe" "Studium-Windows-${{ matrix.arch }}.exe"
       - name: Subir ejecutable directo
         uses: actions/upload-artifact@v4
         with:
           name: Studium-Windows-${{ matrix.arch }}-Portable
-          path: Studium-Windows-${{ matrix.arch }}-Portable/Studium.exe
+          path: Studium-Windows-${{ matrix.arch }}.exe
           if-no-files-found: error
           retention-days: 14
 
