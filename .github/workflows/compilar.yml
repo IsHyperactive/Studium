@@ -314,7 +314,7 @@ jobs:
           SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          gh api --silent -X PATCH "repos/${GITHUB_REPOSITORY}/git/refs/tags/v0.1.1" -f sha="${SHA}" -f force=true
+          gh api --silent -X PATCH "repos/${GITHUB_REPOSITORY}/git/refs/tags/v0.1.1" -f sha="${SHA}" -F force=true
           echo "Tag v0.1.1 apunta al commit que acaba de compilarse."
       - name: Publicar una única release portable
         uses: softprops/action-gh-release@v2
