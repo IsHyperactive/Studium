@@ -84,6 +84,9 @@ export function createLocalStudyPlan(name:string,subject:string,source:string,mi
   if(focus[0])group.push('Define «'+focus[0]+'» con tus palabras. Después verifica tu explicación en el fragmento del bloque.');
   if(focus.length>=2)group.push('¿Cómo se relacionan «'+focus[0]+'» y «'+focus[1]+'» según el archivo? Si no hay relación explícita, explica por separado y señala tu inferencia.');
   if(evidence)group.push('¿Qué idea central expresa este fragmento y qué evidencia aporta? Reescríbelo sin copiar: «'+evidence+'»');
+  // Garantiza ejercicios por sección aunque la extracción de términos no encuentre suficientes conceptos.
+  group.push('Explica qué enseña «'+topic.title+'» usando una afirmación respaldada por el material y una paráfrasis propia.');
+  group.push('Sin consultar, resume «'+topic.title+'» en 2–3 ideas y verifica cada una en el texto.');
   questionGroups.push(group);
  }
  // Primero una pregunta anclada a cada bloque, después rellenar en rondas.
