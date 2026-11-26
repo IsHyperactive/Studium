@@ -304,30 +304,17 @@ jobs:
           set -euo pipefail
           release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v0.1.1" --jq .id)"
           expected=( "RELEASE_NOTES.md" "SHA256SUMS.txt" "Studium-Windows-x64-Portable.zip" "Studium-Windows-arm64-Portable.zip" "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage" "Studium-macOS-x64-Portable.zip" "Studium-macOS-arm64-Portable.zip" )
-          gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}" --jq '.assets[] | [.id,.name] | @tsv' | while IFS=        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          keep_tag="v0.1.1"
-          old_releases="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/releases" --jq ".[] | select(.tag_name != \"${keep_tag}\") | .id")"
-          while IFS= read -r release_id; do
-            [ -z "$release_id" ] && continue
-            gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${release_id}"
-          done <<< "$old_releases"
-          old_tags="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/tags" --jq ".[] | select(.name != \"${keep_tag}\") | .name")"
-          while IFS= read -r tag; do
-            [ -z "$tag" ] && continue
-            gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/${tag}"
-          done <<< "$old_tags"
-\t' read -r asset_id asset_name; do
-            if ! printf "%s\n" "${expected[@]}" | grep -Fxq "${asset_name}"; then
+          gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}" --jq '.assets[] | [.id,.name] | @tsv' | while read -r line; do
+            asset_id="${line%%$'\\t'*}"
+            asset_name="${line#*$'\\t'}"
+            if ! printf '%s\\n' "${expected[@]}" | grep -Fxq "${asset_name}"; then
               gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}"
               echo "Eliminado asset obsoleto: ${asset_name}"
             fi
           done
           actual="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v0.1.1" --jq '.assets[].name' | sort)"
-          expected_sorted="$(printf "%s\n" "${expected[@]}" | sort)"
-          diff -u <(printf '%s\n' "${expected_sorted}") <(printf '%s\n' "${actual}")
+          expected_sorted="$(printf '%s\\n' "${expected[@]}" | sort)"
+          diff -u <(printf '%s\\n' "${expected_sorted}") <(printf '%s\\n' "${actual}")
           echo "Release contiene únicamente los 8 assets oficiales."
       - name: Eliminar releases y tags antiguos (solo tras verificación)
         env:
