@@ -44,7 +44,7 @@ jobs:
         run: npm run icons
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: ${{ matrix.rust_target }}
       - name: TypeScript
         run: npm run typecheck
       - name: Frontend
@@ -182,9 +182,11 @@ jobs:
       matrix:
         include:
           - arch: arm64
-            target: aarch64-linux-android
-          - arch: x64
-            target: x86_64-linux-android
+            rust_target: aarch64-linux-android
+            tauri_target: aarch64
+          - arch: x86_64
+            rust_target: x86_64-linux-android
+            tauri_target: x86_64
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -214,7 +216,7 @@ jobs:
       - name: Iconos Android
         run: npm run icons
       - name: APK
-        run: npm run tauri android build -- --apk --target ${{ matrix.arch }} --ci
+        run: npm run tauri android build -- --apk --target ${{ matrix.tauri_target }} --ci
       - name: Subir APK
         uses: actions/upload-artifact@v4
         with:
