@@ -1,56 +1,40 @@
-# Arquitectura inicial
+# Arquitectura de Studium
 
-## Estado
+## Estado actual
+El MVP ya no es solo una pantalla de muestra: incluye interfaz y flujos local-first. No existe backend ni sincronización.
 
-Esta arquitectura es una base mínima para habilitar compilación y validar el arranque multiplataforma. No representa todavía la arquitectura funcional del producto. La matriz de paquetes se está ampliando; solo los artefactos de un workflow exitoso deben considerarse disponibles.
+## Stack
+- Tauri 2 + Rust para el contenedor.
+- Vite + TypeScript sin framework.
+- CSS responsive y tema del sistema.
+- localStorage, clave `studium-local-v1`, estructura JSON.
 
-## Stack inicial
+## Funciones
+- Materiales CRUD, búsqueda, filtros por materia, apuntes/libros/enlaces/recursos.
+- Tarjetas de repaso con intervalos básicos ajustados por respuesta.
+- Sesiones de estudio, timer, pausa, reinicio, historial y registro manual.
+- Dashboard y objetivo diario.
+- Respaldo JSON importar/exportar y borrado de datos.
 
-- **Tauri 2 + Rust:** shell nativo y núcleo de aplicación.
-- **Vite + TypeScript:** frontend web compilado y servido dentro de Tauri.
-- **HTML/CSS:** interfaz de bienvenida de prueba, responsive y con preferencia de tema del sistema.
-- **GitHub Actions:** CI y releases preliminares para desktop y Android.
+## Privacidad y persistencia
+Los datos se guardan en el WebView local al dispositivo. No hay cuenta, sync o cifrado. El respaldo es JSON de texto, así que debe guardarse de forma privada. Los datos pueden perderse al borrar datos de la aplicación o desinstalar; exporta respaldo periódicamente.
 
-## Plataformas y formatos objetivo
+## Archivos principales
+- `src/main.ts`: lógica, vistas, formularios y acciones.
+- `src/style.css`: estilos adaptables y modo oscuro.
+- `src-tauri/src/`: shell Rust.
+- `src-tauri/tauri.conf.json`: configuración.
+- `.github/workflows/compilar.yml`: CI.
 
-| Sistema | Arquitectura | Formatos |
-|---|---|---|
-| Windows | x86, x64, ARM64 | NSIS installer y ZIP portable |
-| Linux | x64, ARM64 | AppImage, DEB, TAR.GZ |
-| macOS | Intel x64, Apple Silicon ARM64 | DMG y ZIP de .app |
-| Android | ARM64, x86_64 | APK |
+## Verificación local
+```sh
+npm install
+npm run typecheck
+npm run build
+npm run tauri dev
+```
 
-Los paquetes no están firmados ni notarizados. La compatibilidad real se confirma por plataforma tras una compilación exitosa.
+Android necesita SDK, NDK y JDK. La inicialización Android se realiza con Tauri CLI en el entorno de compilación.
 
-## Estructura actual
-
-- `src/`: frontend.
-- `src-tauri/src/`: código Rust.
-- `src-tauri/tauri.conf.json`: configuración de Tauri.
-- `.github/workflows/compilar.yml`: CI, matriz de compilación y publicación automática.
-
-## Build local
-
-Requisitos generales: Node.js, npm, Rust y las dependencias de plataforma indicadas en la [guía oficial de Tauri](https://v2.tauri.app/start/prerequisites/).
-
-- Frontend: `npm install` y `npm run build`.
-- Desktop: `npm run tauri build`.
-- Android: configurar SDK/NDK/JDK, ejecutar `npm run tauri android init`, luego `npm run tauri android build -- --apk --target aarch64`.
-
-## Publicaciones
-
-Cuando todas las matrices concluyen correctamente en `main`, el workflow prepara un Release preliminar versionado por número de ejecución. Incluye:
-- Archivos con nombres de sistema/arquitectura y formato.
-- Notas automáticas: estado de desarrollo, formatos disponibles, compatibilidad y requisitos, instrucciones básicas, limitaciones, commit y link a la ejecución.
-- `SHA256SUMS.txt` con hashes de archivos para comprobar integridad.
-
-Los builds preliminares no son releases estables, no están firmados y pueden tener advertencias de seguridad al instalar.
-
-## Decisiones pendientes
-
-- Arquitectura funcional y modelo de datos del MVP.
-- Persistencia y migraciones.
-- Gestión de importación y formatos.
-- Pruebas automatizadas.
-- Identidad visual definitiva e iconos de instalador.
-- Firma, notarización y canales de distribución estables.
+## Pendiente
+Lectura/importación PDF y EPUB, exámenes, repetición espaciada más sólida y tests, persistencia robusta/migraciones, adjuntos, backup automático, sync opcional, accesibilidad, lápiz/gestos y pruebas en dispositivos reales.
