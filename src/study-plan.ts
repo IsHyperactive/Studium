@@ -1,5 +1,5 @@
 import {retrieveKnowledge} from './knowledge-base.ts';
-export type LocalStudyPlan={name:string,subject:string,source:string,summary:string,outline:string[],terms:string[],cards:{front:string,back:string}[],questions:string[],method:string,sessionCount:number,minutesPerSession:number};
+export type LocalStudyPlan={name:string,subject:string,source:string,summary:string,outline:string[],terms:string[],cards:{front:string,back:string}[],questions:string[],method:string,sessionCount:number,minutesPerSession:number,warnings?:string[]};
 type Section={title:string,body:string,parts?:Section[]};
 const TOKEN=/[a-záéíóúüñ]{2,}/gi;
 const norm=(s:string)=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
