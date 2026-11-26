@@ -145,7 +145,7 @@ async function enhancePlanWithAI(local:GeneratedStudy,minutes:number,depth:'stan
  const worker=async()=>{
   while(true){
    const index=done++;if(index>=batches.length)return;
-   const batch=batches[index];progress('IA: lecciones '+Math.min(chunks.length,index*2+1)+'–'+Math.min(chunks.length,index*2+batch.length)+' de '+chunks.length…');
+   const batch=batches[index];progress('IA: lecciones '+Math.min(chunks.length,index*2+1)+'–'+Math.min(chunks.length,index*2+batch.length)+' de '+chunks.length+'…');
    try{
     const raw=await requestAI(aiSettings,aiKey,[{role:'system',content:STUDIUM_LEARNING_CORE+'\nEn esta tarea produce material docente riguroso, específico al fragmento, con respuestas y evidencia literal.'},{role:'user',content:buildAILessonBatchPrompt(batch,map,minutes)}]);
     const parsed=parseAILessonBatch(raw,batch);parsed.forEach(x=>results.set(x.id,x));
