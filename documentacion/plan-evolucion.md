@@ -11,21 +11,21 @@ Este plan prioriza una app de aprendizaje funcional sobre una lista de funciones
 - [x] Contexto recuperado de materiales locales y nombres de fuentes.
 - [x] Generador de guías con validación de salida y modo local de respaldo.
 - [ ] Pruebas manuales de los flujos completos y revisión de UI en Windows, Linux y Surface.
-- [ ] Revisar cada error del CI y evitar integrar hasta builds verdes consecutivos.
+- [x] Corregir los errores detectados por CI y dejar typecheck, pruebas y build web verdes en el último commit.
 
 ## Fase 1 — Profesor IA sólido
 - [ ] Configuración de proveedores simplificada, instrucciones claras para Ollama y proveedores remotos.
-- [ ] Conversaciones separadas, renombrar, borrar y exportar.
+- [x] Conversaciones separadas: crear, abrir, borrar y persistir historial.\n- [ ] Renombrar y exportar conversaciones individualmente.
 - [ ] Mostrar fuentes con fragmentos consultados; abrir material original.
-- [ ] Recuperación mejorada: relevancia, materia, filtros y límites de contexto.
+- [x] Recuperación léxica mejorada: normalización de acentos, señales por título/materia, fragmentos y límite de contexto.\n- [ ] Añadir filtros de materia y fuentes consultables.
 - [ ] Modo tutor: pregunta primero, pista, segundo intento y explicación.
-- [ ] Modo práctica: preguntas secuenciales, respuesta del alumno, feedback y nivel adaptativo.
-- [ ] Comandos rápidos: explicar, resumir, crear plan, quiz, tarjetas y aclarar errores.
-- [ ] Cancelar generación y recuperar error sin perder conversación.
+- [x] Quiz secuencial, evaluación, feedback y adaptación de dificultad dentro de la sesión.
+- [x] Atajos de explicación, plan, recuperación activa, quiz y diagnóstico de lagunas.\n- [ ] Añadir acciones de resumen, tarjetas y aclarar errores.
+- [x] Cancelar chat y conservar el mensaje de cancelación/error en el historial.
 - [ ] Pruebas contra respuestas vacías, JSON inválido, timeout y API no disponible.
 
 ## Fase 2 — Motor de estudio
-- [ ] Objetivos claros y sesiones ajustadas a duración elegida.
+- [x] Objetivo y duración por sesión (15/25/30/45/60), sesiones progresivas y checkpoints; valida el plan IA y usa fallback local.
 - [ ] Guía con progreso y tareas; completar, posponer o reprogramar.
 - [ ] Tarjetas generadas con control de calidad y edición antes de guardar.
 - [ ] Repaso espaciado ajustado por respuesta, no solo botones de intervalos fijos.
@@ -42,7 +42,7 @@ Este plan prioriza una app de aprendizaje funcional sobre una lista de funciones
 - [ ] Tema claro/oscuro y preferencias.
 
 ## Fase 4 — Calidad y distribución
-- [x] Tests de unidad para ranking de fuentes y validación/parsing de guías IA.
+- [x] Tests de unidad para ranking, normalización, parser/validación de guías, planificador local y quiz.
 - [ ] Tests de unidad para programación de repaso y almacenamiento.
 - [ ] Tests de integración de importación/exportación y almacenamiento portable.
 - [ ] CI: typecheck, build, pruebas y empaquetado por arquitectura.
