@@ -82,3 +82,30 @@ button:has(.ui-icon){display:inline-flex;align-items:center;justify-content:cent
 .nav-icon .ui-icon,.nav-btn .ui-icon{width:20px;height:20px;margin:0}
 button .ui-icon,.nav-btn .ui-icon,.kind .ui-icon,.topbar .ui-icon{margin:0}
 .topbar .icon,.topbar .menu{display:grid;place-items:center}
+
+/* Tutor IA integrado: conversación, fuentes y ajustes */
+.tutor-setup,.tutor-panel{border:1px solid var(--line);background:var(--paper);border-radius:18px;padding:16px;margin:12px 0}
+.tutor-setup details>summary{cursor:pointer;font-weight:750;padding:6px}
+.tutor-setup .prefs-grid{margin-top:14px}
+.tutor-toolbar{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tutor-toolbar label{flex:1;min-width:220px}
+.tutor-chat{display:flex;flex-direction:column;gap:12px;max-height:58vh;overflow:auto;padding:12px 2px;margin:12px 0;scroll-behavior:smooth}
+.tutor-message{max-width:92%;padding:12px 15px;border-radius:16px;border:1px solid var(--line);line-height:1.6;overflow-wrap:anywhere}
+.tutor-message.user{align-self:flex-end;background:var(--accent-soft,#dff4ef);border-color:transparent}
+.tutor-message.assistant{align-self:flex-start;background:var(--paper-2,#f4f7f8)}
+.tutor-role{font-size:.75rem;font-weight:800;opacity:.7;margin-bottom:5px}
+.tutor-text{white-space:normal}
+.tutor-sources{margin-top:9px;display:flex;gap:5px;flex-wrap:wrap;font-size:.76rem;opacity:.8}
+.tutor-sources span{border:1px solid var(--line);border-radius:999px;padding:3px 8px}
+.tutor-empty{padding:30px 15px;text-align:center}
+.tutor-empty h3{margin:10px 0 5px}
+.tutor-empty p{max-width:520px;margin:0 auto;color:var(--muted)}
+.tutor-prompts{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
+.tutor-prompts button{border:1px solid var(--line);background:var(--surface,#fff);border-radius:999px;padding:8px 12px;cursor:pointer;color:var(--text)}
+.tutor-compose{display:flex;align-items:end;gap:10px}
+.tutor-compose textarea{flex:1;min-width:0;resize:vertical;min-height:68px}
+.tutor-compose button{min-height:44px}
+:root[data-theme="dark"] .tutor-message.user{background:#244a4d;color:#e3f6f4}
+:root[data-theme="dark"] .tutor-message.assistant{background:#202e37}
+:root[data-theme="dark"] .tutor-prompts button{background:#1d2d36;color:#c9dbe3;border-color:#344650}
+@media(max-width:620px){.tutor-message{max-width:100%}.tutor-compose{flex-direction:column;align-items:stretch}.tutor-toolbar{align-items:stretch}}
