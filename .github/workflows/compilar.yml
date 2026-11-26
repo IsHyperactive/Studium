@@ -162,17 +162,12 @@ jobs:
         run: npm run build
       - name: Compilar DMG
         run: npm run tauri build -- --target ${{ matrix.target }} --bundles dmg
-      - name: Crear ZIP portable de aplicación
-        run: |
-          APP="src-tauri/target/${{ matrix.target }}/release/bundle/macos/Studium.app"
-          ditto -c -k --sequesterRsrc --keepParent "$APP" "Studium-macOS-${{ matrix.arch }}-Portable.zip"
       - name: Subir macOS
         uses: actions/upload-artifact@v4
         with:
           name: Studium-macOS-${{ matrix.arch }}
           path: |
             src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
-            Studium-macOS-${{ matrix.arch }}-Portable.zip
           if-no-files-found: error
           retention-days: 14
 
@@ -275,15 +270,15 @@ jobs:
             done
             echo
             echo "## Qué incluye"
-            echo "- Windows: x86 (32 bits), x64 y ARM64 — instalador NSIS y ZIP portable."
+            echo "- Windows: x64 y ARM64 — instalador NSIS y ZIP portable."
             echo "- Linux: x64 y ARM64 — AppImage, DEB y archivo portable TAR.GZ."
-            echo "- macOS: Intel x64 y Apple Silicon ARM64 — DMG y ZIP de la aplicación."
+            echo "- macOS: Intel x64 y Apple Silicon ARM64 — DMG instalable."
             echo "- Android: ARM64 y x86_64 — APK."
             echo
             echo "## Compatibilidad y notas"
             echo "- Windows: necesita WebView2 Runtime; el ZIP portable no instala dependencias."
             echo "- Linux: AppImage es la opción portable preferida; DEB para Debian/Ubuntu. El TAR.GZ requiere bibliotecas del sistema compatibles."
-            echo "- macOS: los paquetes no están firmados ni notarizados; macOS puede mostrar advertencias de Gatekeeper."
+            echo "- macOS: los DMG no están firmados ni notarizados; macOS puede mostrar advertencias de Gatekeeper."
             echo "- Android: APK de instalación directa; puede requerir permitir instalación desde fuentes externas."
             echo "- Los formatos portables conservan sus archivos dentro del paquete; esta compilación no garantiza que los datos del usuario se almacenen junto a la aplicación."
             echo
