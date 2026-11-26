@@ -19,8 +19,9 @@ PRINCIPIOS:
 FORMATO: respuestas claras y útiles, encabezados solo cuando aporten; evita largos bloques, listas excesivas y frases vacías. Si es tutoría, termina con una pregunta o ejercicio concreto para comprobar aprendizaje.
 `;
 export function rankContext(query:string,materials:{title:string,subject:string,content:string}[],limit=5){
- const terms=(query.toLowerCase().match(/[a-záéíóúüñ0-9]{3,}/g)||[]).filter(x=>!['para','como','que','con','por','una','the','and','you'].includes(x));
- return materials.map(m=>{const text=(m.title+' '+m.subject+' '+m.content).toLowerCase();let score=terms.reduce((n,t)=>n+(text.split(t).length-1),0);return {m,score};}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,limit).map(({m})=>({title:m.title,subject:m.subject,excerpt:m.content.slice(0,6500)}));
+ const terms=(query.toLowerCase().match(/[a-záéíóúüñ0-9]{3,}/g)||[]).filter(x=>!['para','como','que','con','por','una','the','and','you','los','las','del'].includes(x));
+ const scored=materials.map(m=>{const text=(m.title+' '+m.subject+' '+m.content).toLowerCase();const score=terms.reduce((n,t)=>n+(text.split(t).length-1)*(m.title.toLowerCase().includes(t)?4:1),0);let best=0,bestAt=0;const size=1700;for(let i=0;i<text.length;i+=850){const part=text.slice(i,i+size);const value=terms.reduce((n,t)=>n+(part.split(t).length-1),0);if(value>best){best=value;bestAt=i;}}return {m,score,bestAt};}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,limit);
+ return scored.map(({m,bestAt})=>({title:m.title,subject:m.subject,excerpt:m.content.slice(Math.max(0,bestAt-100),Math.min(m.content.length,bestAt+1700))}));
 }
 export async function requestAI(settings:AISettings,key:string,messages:{role:'system'|'user'|'assistant',content:string}[],signal?:AbortSignal){
  const base=settings.baseUrl.trim().replace(/\/$/,'');if(!base)throw new Error('Configura la URL del servicio IA.');
