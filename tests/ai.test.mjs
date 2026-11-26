@@ -56,7 +56,7 @@ test('rechaza plan IA con JSON inválido o solo una lección',()=>{
 test('prompt de plan pide estructura de lecciones y citas exactas',()=>{
  const p=studyPlanPrompt('extracto literal','sesión local',30);
  assert.match(p,/2–24 lecciones/);
- assert.match(p,/citas literal/);
+ assert.match(p,/copiarse literalmente/);
  assert.match(p,/JSON válido/);
  assert.match(p,/30 minutos/);
 });
