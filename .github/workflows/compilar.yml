@@ -312,9 +312,10 @@ jobs:
             echo
             echo "## Qué hace Studium"
             echo "- Importa PDF, EPUB, DOCX, TXT y Markdown y extrae texto en el dispositivo."
-            echo "- Genera resumen, esquema, conceptos clave, preguntas y un plan local heurístico (no IA) con evidencia, objetivos medibles, práctica activa y repaso."
-            echo "- Crea tarjetas de repaso automáticamente y guarda una guía en la Biblioteca."
-            echo "- El plan local usa estructura, términos y fragmentos del archivo para sesiones progresivas, recuperación activa, práctica, checkpoints y repaso espaciado. No es IA ni entrenamiento de modelos. Los PDF escaneados requieren OCR, que aún no está incluido."
+            echo "- Crea resúmenes, esquemas, conceptos, preguntas, tarjetas y planes de estudio a partir del material importado."
+            echo "- El plan base es heurístico local; opcionalmente puedes ampliarlo con un modelo IA configurado para producir explicaciones, actividades y preguntas adicionales. La IA recibe extractos seleccionados, no necesariamente el documento completo; las citas se verifican contra el texto enviado."
+            echo "- Tutor IA conversacional con contexto recuperado de tu biblioteca, usando Ollama local o proveedores OpenAI-compatible (OpenAI o endpoint personalizado). El modelo no viene incluido ni es entrenado por Studium."
+            echo "- Los PDF escaneados requieren OCR, aún no incluido. Verifica respuestas, evidencias y preguntas generadas."
             echo
             echo "## Descargas"
             echo "| Plataforma | Arquitectura | Formato |"
@@ -340,7 +341,7 @@ jobs:
             echo "- Workflow: [Ver compilación](${RUN_URL})"
             echo
             echo "## Limitaciones conocidas"
-            echo "Limitaciones: no incluye OCR para PDF escaneados, IA integrada, exámenes, audio, anotación con lápiz, sincronización ni cuentas. El plan de estudio es heurístico local y puede omitir detalles; revisa las evidencias y preguntas antes de usarlo."
+            echo "No incluye OCR, exámenes automáticos, audio, anotación con lápiz, sincronización ni cuentas. Las funciones IA requieren configurar y conectar un proveedor/modelo; el modelo puede equivocarse, recibe extractos seleccionados y no está entrenado ni incluido en Studium. El plan heurístico local puede omitir detalles; comprueba las evidencias y preguntas."
             echo
             echo "## Sobre la versión"
             echo "Lanzamiento oficial estable de Studium 0.1.1. Windows ofrece ejecutables EXE directos; Linux AppImage y macOS apps portables en ZIP. No incluye instaladores, DEB, DMG, APK ni versiones duplicadas."
@@ -357,7 +358,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.1.1
-          name: Studium v0.1.1 · Lanzamiento oficial
+          name: Studium 0.1.1 — Lanzamiento oficial
           target_commitish: main
           prerelease: false
           make_latest: true
