@@ -5,19 +5,44 @@
   Una herramienta para organizar el aprendizaje y estudiar con intención.
 </p>
 
-> **Estado del proyecto:** esqueleto inicial en construcción. La primera pantalla es demostrativa; no están implementadas todavía las funciones del MVP.
+> **Estado del proyecto:** esqueleto inicial en construcción. La primera pantalla es demostrativa; las funciones del MVP aún no están implementadas. Los paquetes multiplataforma se están validando en CI y las publicaciones automáticas son compilaciones preliminares.
 
 ## Objetivo
 
 Studium está pensado como una aplicación de estudio con una experiencia adaptable a móvil, tablet y escritorio. La interfaz prioriza el uso táctil, controles cómodos, gestos y compatibilidad con lápiz cuando la plataforma lo permita.
 
-## Plataformas previstas
+## Plataformas y distribuciones previstas
 
-| Plataforma | Estado |
+| Plataforma / arquitectura | Formatos previstos |
 |---|---|
-| Windows ARM64 | Compilación CI en proceso de validación |
-| Windows x64 | Compilación CI en proceso de validación |
-| Android ARM64 | Compilación CI en proceso de validación |
+| Windows x86 (32 bits) | Instalador NSIS y ZIP portable |
+| Windows x64 | Instalador NSIS y ZIP portable |
+| Windows ARM64 | Instalador NSIS y ZIP portable |
+| Linux x64 | AppImage, DEB y TAR.GZ portable |
+| Linux ARM64 | AppImage, DEB y TAR.GZ portable |
+| macOS Intel x64 | DMG y ZIP de la app |
+| macOS Apple Silicon ARM64 | DMG y ZIP de la app |
+| Android ARM64 | APK |
+| Android x86_64 (emuladores) | APK |
+
+La matriz refleja objetivos de compilación; cada formato se considera disponible solo cuando aparece en una publicación exitosa. Los paquetes todavía no están firmados/notarizados.
+
+## Releases y descargas
+
+Cada compilación exitosa de `main` está configurada para publicar un Release preliminar de GitHub. Las publicaciones incluirán:
+- Instaladores y archivos portables identificados por plataforma y arquitectura.
+- Notas de publicación con estado, compatibilidad, instrucciones, limitaciones, commit y enlace al workflow.
+- Archivo `SHA256SUMS.txt` para comprobar integridad.
+- Versiones automáticas con identificador único de compilación; no sobrescriben releases anteriores.
+
+[Releases y descargas](https://github.com/IsHyperactive/Studium/releases) · [Compilaciones CI](https://github.com/IsHyperactive/Studium/actions)
+
+### Qué significa portable
+
+- **Windows ZIP:** ejecutable empaquetado; requiere Windows y WebView2 Runtime. No es una versión que garantice guardar datos en la carpeta del ZIP.
+- **Linux AppImage:** formato autocontenido pensado para ejecutar sin instalar. El TAR.GZ contiene el ejecutable y sigue requiriendo bibliotecas del sistema compatibles.
+- **macOS ZIP:** contiene `Studium.app`; sin firma ni notarización en esta etapa.
+- **Android:** APK instalable directamente; no es un paquete portable de escritorio.
 
 ## Plan de desarrollo
 
@@ -44,7 +69,13 @@ La planificación inicial está abierta en GitHub Issues:
 
 ## Desarrollo
 
-La configuración de compilación y la arquitectura se documentarán cuando el código fuente esté incorporado. Actualmente no hay archivos de aplicación ni configuración de compilación en la rama `main`.
+Requisitos generales: Node.js, npm, Rust y las dependencias de plataforma indicadas en la [guía oficial de Tauri](https://v2.tauri.app/start/prerequisites/).
+
+- Frontend: `npm install` y `npm run build`.
+- Desktop: `npm run tauri build`.
+- Android: configurar SDK/NDK/JDK, ejecutar `npm run tauri android init`, luego `npm run tauri android build -- --apk --target aarch64`.
+
+Consulta [documentacion/arquitectura.md](documentacion/arquitectura.md) y [AGENTS.md](AGENTS.md).
 
 ## Contribuir
 
