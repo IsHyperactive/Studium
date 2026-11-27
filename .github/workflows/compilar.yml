@@ -7,6 +7,12 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      authorize_release:
+        description: "Autoriza explícitamente actualizar/publicar la release v0.1.1"
+        required: true
+        default: false
+        type: boolean
 
 concurrency:
   group: studium-portable-${{ github.ref }}
@@ -274,7 +280,7 @@ jobs:
 
   release:
     name: Unificar publicación portable
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    if: github.event_name == 'workflow_dispatch' && inputs.authorize_release == true && github.ref == 'refs/tags/v0.1.1'
     needs: [windows, linux, macos]
     runs-on: ubuntu-24.04
     permissions:
@@ -347,20 +353,12 @@ jobs:
             echo "## Sobre la versión"
             echo "Lanzamiento oficial estable de Studium 0.1.1. Windows ofrece ejecutables EXE directos; Linux AppImage y macOS apps portables en ZIP. No incluye instaladores, DEB, DMG, APK ni versiones duplicadas."
           } > RELEASE_NOTES.md
-      - name: Alinear tag oficial con el commit verificado
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          gh api --silent -X PATCH "repos/${GITHUB_REPOSITORY}/git/refs/tags/v0.1.1" -f sha="${SHA}" -F force=true
-          echo "Tag v0.1.1 apunta al commit que acaba de compilarse."
       - name: Publicar una única release portable
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.1.1
           name: Studium 0.1.1 — Lanzamiento oficial
-          target_commitish: main
+          target_commitish: ${{ github.sha }}
           prerelease: false
           make_latest: true
           body_path: release-assets/RELEASE_NOTES.md
@@ -414,37 +412,3 @@ jobs:
             exit 1
           fi
           echo "Se verificaron los seis paquetes, sus hashes, los formatos y las notas públicas."
-      - name: Eliminar assets sobrantes de la release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v0.1.1" --jq .id)"
-          expected=( "RELEASE_NOTES.md" "SHA256SUMS.txt" "Studium-Windows-x64.exe" "Studium-Windows-arm64.exe" "Studium-0.1.1-Linux-x64.AppImage" "Studium-0.1.1-Linux-arm64.AppImage" "Studium-macOS-x64-Portable.zip" "Studium-macOS-arm64-Portable.zip" )
-          while IFS=$'\t' read -r asset_id asset_name; do
-            [ -z "${asset_id}" ] && continue
-            if ! printf '%s\n' "${expected[@]}" | grep -Fxq "${asset_name}"; then
-              gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}"
-              echo "Eliminado asset obsoleto: ${asset_name}"
-            fi
-          done < <(gh api "repos/${GITHUB_REPOSITORY}/releases/${release_id}" --jq '.assets[] | [.id,.name] | @tsv')
-          actual="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v0.1.1" --jq '.assets[].name' | sort)"
-          expected_sorted="$(printf '%s\n' "${expected[@]}" | sort)"
-          diff -u <(printf '%s\n' "${expected_sorted}") <(printf '%s\n' "${actual}")
-          echo "Release contiene únicamente los 8 assets oficiales."
-      - name: Eliminar releases y tags antiguos (solo tras verificación)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          keep_tag="v0.1.1"
-          old_releases="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/releases" --jq ".[] | select(.tag_name != \"${keep_tag}\") | .id")"
-          while IFS= read -r release_id; do
-            [ -z "$release_id" ] && continue
-            gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${release_id}"
-          done <<< "$old_releases"
-          old_tags="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/tags" --jq ".[] | select(.name != \"${keep_tag}\") | .name")"
-          while IFS= read -r tag; do
-            [ -z "$tag" ] && continue
-            gh api --silent -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/${tag}"
-          done <<< "$old_tags"
